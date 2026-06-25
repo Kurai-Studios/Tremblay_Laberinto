@@ -789,6 +789,7 @@ GameObject:
   m_Component:
   - component: {fileID: 607208735}
   - component: {fileID: 607208734}
+  - component: {fileID: 607208736}
   m_Layer: 0
   m_Name: CylinderPlatTester
   m_TagString: Untagged
@@ -809,15 +810,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CylinderPlatformGen
   minPlatformsPerLevel: 2
-  maxPlatformsPerLevel: 5
-  levelHeight: 3
+  maxPlatformsPerLevel: 4
+  levelHeight: 2
   minAngleSeparation: 30
-  seed: 42
   cylinderPrefabs:
-  - {fileID: 8775327238126333306, guid: 23f14468b8c590c428afe60d10827312, type: 3}
-  - {fileID: 3494477682829007931, guid: afa0e65c1b24c604cb37a27c2685677b, type: 3}
-  - {fileID: 2272158794208233807, guid: 5769468e9e076ca419cc192ace1db1af, type: 3}
-  - {fileID: 7391329315095997787, guid: fab1b3f71667df74494c32df299cd882, type: 3}
+  - {fileID: 2606996240864800789, guid: d89e34693d9427242a793453470462a4, type: 3}
+  - {fileID: 4790758439734709216, guid: 2928a08eafb9667439fdbb9c70a41760, type: 3}
+  - {fileID: 1080729184369340795, guid: a10901f5aa468ef488755147e7a742df, type: 3}
+  - {fileID: 4813324487981402418, guid: 54622700fc0a01f40b1bdfe8edb26fc4, type: 3}
 --- !u!4 &607208735
 Transform:
   m_ObjectHideFlags: 0
@@ -833,6 +833,23 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &607208736
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 607208733}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92063ee9a348d3c4cb5c6c2c79560731, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CylinderRender
+  platformGen: {fileID: 607208734}
+  platformPrefab: {fileID: 358911229342668057, guid: 2f9e55dcd15165345b976611f8676f09, type: 3}
+  platformScale: 1
+  heightOffset: 0
+  showGizmos: 0
 --- !u!1 &640958389
 GameObject:
   m_ObjectHideFlags: 0

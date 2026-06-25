@@ -8,19 +8,21 @@ public class CylinderPlatformObj : MonoBehaviour
 
     private TowerPlatform platformData;
     private Vector3 worldPosition;
+    private Vector3 basePosition;
     private float radius;
     private float levelHeight;
 
     // Inicializa la plataforma con los datos generados
-    public void Init(TowerPlatform data, float cylinderRadius, float heightOffset, float levelHeight)
+    public void Init(TowerPlatform data, float cylinderRadius, float heightOffset, float levelHeight, Vector3 basePosition)
     {
         // Guardar referencia a los datos
         platformData = data;
         this.radius = cylinderRadius;
         this.levelHeight = levelHeight;
+        this.basePosition = basePosition;
 
         // Calcular posicion en el mundo
-        worldPosition = CalculateWorldPosition(data.angle, data.level, heightOffset);
+        worldPosition = CalculateWorldPosition(data.angle, data.level);
 
         // Posicionar la plataforma
         transform.position = worldPosition;
@@ -33,20 +35,27 @@ public class CylinderPlatformObj : MonoBehaviour
     }
 
     // Calcula la posicion en el mundo de la plataforma
-    Vector3 CalculateWorldPosition(float angle, int level, float heightOffset)
+    Vector3 CalculateWorldPosition(float angle, int level)
     {
+
+        Debug.Log($"Calculando posición - Ángulo: {angle}, Nivel: {level}");
+
         // Convertir angulo a radianes
         float angleRad = angle * Mathf.Deg2Rad;
 
         // Calcular posicion en el circulo
-        float x = radius * Mathf.Cos(angleRad);
-        float z = radius * Mathf.Sin(angleRad);
+        float localX = radius * Mathf.Cos(angleRad);
+        float localZ = radius * Mathf.Sin(angleRad);
+        float localY = level * levelHeight;
 
-        // Calcular altura (Y) basada en el nivel
-        // El offset es para posicionar la plataforma en la base del cilindro
-        float y = heightOffset + (level * levelHeight);
+        Vector3 position = new Vector3
+          ( basePosition.x + localX,
+            basePosition.y + localY,
+            basePosition.z + localZ );
 
-        return new Vector3(x, y, z);
+        Debug.Log($"Posición calculada: {position}");
+
+        return position;
     }
 
     // Orienta la plataforma para que mire hacia afuera del cilindro
@@ -94,7 +103,7 @@ public class CylinderPlatformObj : MonoBehaviour
         return platformData;
     }
 
-    void OnDrawGizmosSelected()
+    /*void OnDrawGizmosSelected()
     {
         if (platformData != null)
         {
@@ -106,5 +115,5 @@ public class CylinderPlatformObj : MonoBehaviour
             Gizmos.color = Color.yellow;
             Gizmos.DrawLine(Vector3.zero, worldPosition);
         }
-    }
+    }*/
 }

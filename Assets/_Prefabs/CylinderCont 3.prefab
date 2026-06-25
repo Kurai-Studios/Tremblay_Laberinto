@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &8548067664668652285
+--- !u!1 &1080729184369340795
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,30 +8,50 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 3315858841711633429}
+  - component: {fileID: 2814146982447814694}
+  - component: {fileID: 3507452254361450234}
   m_Layer: 0
-  m_Name: CylinderCont
+  m_Name: CylinderCont 3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &3315858841711633429
+--- !u!4 &2814146982447814694
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8548067664668652285}
+  m_GameObject: {fileID: 1080729184369340795}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.465684, y: 0.121098004, z: 0.182036}
-  m_LocalScale: {x: 0.2, y: 0.2, z: 0.2}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 6203193469596868246}
+  m_Children:
+  - {fileID: 8875008677609375847}
+  - {fileID: 297532388488789715}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &8775327238126333306
+--- !u!114 &3507452254361450234
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1080729184369340795}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db832cf306fd4a44d94dda6104f8ccc3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CylinderData
+  altura: 10
+  radio: 5
+  platformStartPoint: {fileID: 5926103084539288050}
+  nombreCilindro: Cilindro 3
+  colorIdentificador: {r: 0, g: 0.1187284, b: 1, a: 1}
+--- !u!1 &4521974902665260257
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -39,49 +59,47 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 6203193469596868246}
-  - component: {fileID: 352738229555412950}
-  - component: {fileID: 6950213447915409528}
-  - component: {fileID: 3531049934321967565}
-  - component: {fileID: 2960812763501404344}
+  - component: {fileID: 8875008677609375847}
+  - component: {fileID: 7196438075173250547}
+  - component: {fileID: 2856770735598191866}
+  - component: {fileID: 3519429777425161960}
   m_Layer: 0
-  m_Name: Cylinder
+  m_Name: Cylinder3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &6203193469596868246
+--- !u!4 &8875008677609375847
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8775327238126333306}
+  m_GameObject: {fileID: 4521974902665260257}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 5, y: 5, z: 5}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 3315858841711633429}
-  m_Father: {fileID: 0}
+  m_Children: []
+  m_Father: {fileID: 2814146982447814694}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &352738229555412950
+--- !u!33 &7196438075173250547
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8775327238126333306}
+  m_GameObject: {fileID: 4521974902665260257}
   m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
---- !u!23 &6950213447915409528
+--- !u!23 &2856770735598191866
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8775327238126333306}
+  m_GameObject: {fileID: 4521974902665260257}
   m_Enabled: 1
   m_CastShadows: 1
   m_ReceiveShadows: 1
@@ -100,7 +118,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: b34b07a45ba63ce47896c9e674f3a7a7, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -124,13 +142,13 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!136 &3531049934321967565
+--- !u!136 &3519429777425161960
 CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8775327238126333306}
+  m_GameObject: {fileID: 4521974902665260257}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -147,20 +165,34 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
---- !u!114 &2960812763501404344
-MonoBehaviour:
+--- !u!1 &5926103084539288050
+GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8775327238126333306}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: db832cf306fd4a44d94dda6104f8ccc3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CylinderData
-  altura: 10
-  radio: 5
-  platformStartPoint: {fileID: 0}
-  nombreCilindro: Cilindro Base
-  colorIdentificador: {r: 1, g: 1, b: 1, a: 1}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 297532388488789715}
+  m_Layer: 0
+  m_Name: CylinderBase 3
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &297532388488789715
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5926103084539288050}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: -5, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2814146982447814694}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

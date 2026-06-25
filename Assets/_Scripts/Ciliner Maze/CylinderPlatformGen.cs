@@ -21,13 +21,13 @@ public class TowerPlatform
 public class CylinderPlatformGen : MonoBehaviour
 {
     [Header("Platform Settings")]
-    [Range(2, 5)] public int minPlatformsPerLevel = 2;
-    [Range(2, 5)] public int maxPlatformsPerLevel = 5;
-    public float levelHeight = 3f;
+    [Range(2, 50)] public int minPlatformsPerLevel = 2;
+    [Range(2, 50)] public int maxPlatformsPerLevel = 5;
+    public float levelHeight = 1.5f;
     public float minAngleSeparation = 30f;  // Grados minimos entre plataformas
 
     [Header("Randomization")]
-    public int seed = 42;
+    //public int seed = -1;
 
     [Header("Cylinder Prefabs")]
     public GameObject[] cylinderPrefabs;  // Al menos 4 prefabs diferentes
@@ -35,6 +35,7 @@ public class CylinderPlatformGen : MonoBehaviour
     // Variables internas
     private TowerPlatform[,] platforms;
     private GameObject selectedCylinder;
+    private Vector3 platformBasePosition;
     private float cylinderHeight;
     private float cylinderRadius;
     private int totalLevels;
@@ -45,6 +46,20 @@ public class CylinderPlatformGen : MonoBehaviour
     // Metodo principal que devuelve la matriz de plataformas
     public TowerPlatform[,] GetPlatforms()
     {
+
+        /*if (seed >= 0)
+        {
+            Random.InitState(seed);
+            Debug.Log($"Usando semilla fija: {seed}");
+        }
+        else
+        {
+            // Generar semilla aleatoria real usando GUID
+            int randomSeed = System.Guid.NewGuid().GetHashCode();
+            Random.InitState(randomSeed);
+            Debug.Log($"Usando semilla aleatoria: {randomSeed}");
+        }*/
+
         // Seleccionar cilindro aleatorio
         selectedCylinder = SelectRandomCylinder();
 
@@ -52,9 +67,27 @@ public class CylinderPlatformGen : MonoBehaviour
         cylinderHeight = GetCylinderHeight(selectedCylinder);
         cylinderRadius = GetCylinderRadius(selectedCylinder);
 
+        Debug.Log($"Altura del cilindro: {cylinderHeight}");
+        Debug.Log($"Radio del cilindro: {cylinderRadius}");
+        Debug.Log($"Level Height: {levelHeight}");
+
+        CylinderData info = selectedCylinder.GetComponent<CylinderData>();
+        if (info != null && info.platformStartPoint != null)
+        {
+            platformBasePosition = info.platformStartPoint.transform.position;
+            Debug.Log($"StartPoint position: {platformBasePosition}");
+        }
+        else
+        {
+            platformBasePosition = Vector3.zero;
+            Debug.LogWarning("No hay StartPoint asignado, usando 0,0,0");
+        }
+
         // Calcular numero de niveles basado en la altura
         totalLevels = Mathf.FloorToInt(cylinderHeight / levelHeight);
         if (totalLevels < 1) totalLevels = 1;
+
+        Debug.Log($"Total de niveles calculados: {totalLevels}");
 
         // Inicializar el array de plataformas
         List<TowerPlatform[]> platformList = new List<TowerPlatform[]>();
@@ -101,46 +134,145 @@ public class CylinderPlatformGen : MonoBehaviour
     // Obtiene la altura del cilindro usando Mesh.bounds
     float GetCylinderHeight(GameObject cylinder)
     {
-        if (cylinder == null) return 10f;
+        if (cylinder == null)
+        {
+            Debug.LogError("Cylinder es null");
+            return 10f;
+        }
 
+        CylinderData info = cylinder.GetComponent<CylinderData>();
+        if (info != null)
+        {
+            Debug.Log($"Altura obtenida via CilindroInfo: {info.altura}");
+            return info.altura;
+        }
+
+        // Buscar CilindroInfo en hijos
+        info = cylinder.GetComponentInChildren<CylinderData>();
+        if (info != null)
+        {
+            Debug.Log($"Altura obtenida via CilindroInfo en hijo: {info.altura}");
+            return info.altura;
+        }
+
+        // 2. Intentar obtener MeshFilter
         MeshFilter meshFilter = cylinder.GetComponent<MeshFilter>();
         if (meshFilter != null && meshFilter.sharedMesh != null)
         {
-            return meshFilter.sharedMesh.bounds.size.y;
+            float height = meshFilter.sharedMesh.bounds.size.y;
+            Debug.Log($"Altura obtenida via MeshFilter: {height}");
+            return height;
         }
 
-        // Fallback: intentar con SkinnedMeshRenderer
+        // 3. Buscar MeshFilter en hijos
+        meshFilter = cylinder.GetComponentInChildren<MeshFilter>();
+        if (meshFilter != null && meshFilter.sharedMesh != null)
+        {
+            float height = meshFilter.sharedMesh.bounds.size.y;
+            Debug.Log($"Altura obtenida via MeshFilter en hijo: {height}");
+            return height;
+        }
+
+        // 4. Intentar con SkinnedMeshRenderer
         SkinnedMeshRenderer skinnedMesh = cylinder.GetComponent<SkinnedMeshRenderer>();
         if (skinnedMesh != null && skinnedMesh.sharedMesh != null)
         {
-            return skinnedMesh.sharedMesh.bounds.size.y;
+            float height = skinnedMesh.sharedMesh.bounds.size.y;
+            Debug.Log($"Altura obtenida via SkinnedMeshRenderer: {height}");
+            return height;
         }
 
-        Debug.LogWarning("No se pudo obtener la altura del cilindro, usando valor por defecto");
+        // 5. Usar Renderer.bounds
+        Renderer renderer = cylinder.GetComponent<Renderer>();
+        if (renderer != null)
+        {
+            float height = renderer.bounds.size.y;
+            Debug.Log($"Altura obtenida via Renderer.bounds: {height}");
+            return height;
+        }
+
+        // 6. Usar escala local como fallback
+        float scaleHeight = cylinder.transform.localScale.y;
+        if (scaleHeight > 0)
+        {
+            Debug.Log($"Usando escala local como altura: {scaleHeight}");
+            return scaleHeight;
+        }
+
+        Debug.LogWarning($"No se pudo obtener la altura del cilindro {cylinder.name}, usando valor por defecto 10");
         return 10f;
     }
 
     // Obtiene el radio del cilindro usando Mesh.bounds
     float GetCylinderRadius(GameObject cylinder)
     {
-        if (cylinder == null) return 5f;
+        if (cylinder == null)
+        {
+            Debug.LogError("Cylinder es null");
+            return 5f; // Valor por defecto
+        }
+
+        CylinderData info = cylinder.GetComponent<CylinderData>();
+        if (info != null)
+        {
+            Debug.Log($"Radio obtenido via CilindroInfo: {info.radio}");
+            return info.radio;
+        }
+
+        info = cylinder.GetComponentInChildren<CylinderData>();
+        if (info != null)
+        {
+            Debug.Log($"Radio obtenido via CilindroInfo en hijo: {info.radio}");
+            return info.radio;
+        }
+
+
 
         MeshFilter meshFilter = cylinder.GetComponent<MeshFilter>();
         if (meshFilter != null && meshFilter.sharedMesh != null)
         {
             Bounds bounds = meshFilter.sharedMesh.bounds;
-            return Mathf.Max(bounds.size.x, bounds.size.z) / 2f;
+            float radius = Mathf.Max(bounds.size.x, bounds.size.z) / 2f;
+            Debug.Log($"Radio obtenido via MeshFilter: {radius}");
+            return radius;
         }
 
-        // Fallback: intentar con SkinnedMeshRenderer
+        meshFilter = cylinder.GetComponentInChildren<MeshFilter>();
+        if (meshFilter != null && meshFilter.sharedMesh != null)
+        {
+            Bounds bounds = meshFilter.sharedMesh.bounds;
+            float radius = Mathf.Max(bounds.size.x, bounds.size.z) / 2f;
+            Debug.Log($"Radio obtenido via MeshFilter en hijo: {radius}");
+            return radius;
+        }
+
         SkinnedMeshRenderer skinnedMesh = cylinder.GetComponent<SkinnedMeshRenderer>();
         if (skinnedMesh != null && skinnedMesh.sharedMesh != null)
         {
             Bounds bounds = skinnedMesh.sharedMesh.bounds;
-            return Mathf.Max(bounds.size.x, bounds.size.z) / 2f;
+            float radius = Mathf.Max(bounds.size.x, bounds.size.z) / 2f;
+            Debug.Log($"Radio obtenido via SkinnedMeshRenderer: {radius}");
+            return radius;
         }
 
-        Debug.LogWarning("No se pudo obtener el radio del cilindro, usando valor por defecto");
+        Renderer renderer = cylinder.GetComponent<Renderer>();
+        if (renderer != null)
+        {
+            Bounds bounds = renderer.bounds;
+            float radius = Mathf.Max(bounds.size.x, bounds.size.z) / 2f;
+            Debug.Log($"Radio obtenido via Renderer.bounds: {radius}");
+            return radius;
+        }
+
+        float scaleX = cylinder.transform.localScale.x;
+        float scaleZ = cylinder.transform.localScale.z;
+        float radio = Mathf.Max(scaleX, scaleZ) / 2f;
+        if (radio > 0)
+        {
+            Debug.Log($"Usando escala local como radio: {radio}");
+            return radio;
+        }
+
         return 5f;
     }
 
@@ -148,10 +280,14 @@ public class CylinderPlatformGen : MonoBehaviour
     {
         List<float> angles = new List<float>();
 
+        //Random.InitState(seed);
+
         // Si solo hay 1 plataforma, puede estar en cualquier angulo
         if (count == 1)
         {
-            angles.Add(Random.Range(0f, 360f));
+            float angle = Random.Range(0f, 360f);
+            Debug.Log($"Generando 1 ángulo: {angle}");
+            angles.Add(angle);
             return angles;
         }
 
@@ -164,15 +300,20 @@ public class CylinderPlatformGen : MonoBehaviour
             attempts++;
             float newAngle = Random.Range(0f, 360f);
 
+            Debug.Log($"Intento {attempts}: Generando ángulo {newAngle}");
+
             bool isValid = true;
             foreach (float existingAngle in angles)
             {
                 float difference = Mathf.Abs(newAngle - existingAngle);
-                difference = Mathf.Min(difference, 360f - difference); // Distancia circular
+                difference = Mathf.Min(difference, 360f - difference);
+
+                Debug.Log($"  Comparando con {existingAngle}: diferencia {difference}, mínima {minAngleSeparation}");
 
                 if (difference < minAngleSeparation)
                 {
                     isValid = false;
+                    Debug.Log($"  Ángulo rechazado - demasiado cerca");
                     break;
                 }
             }
@@ -180,16 +321,11 @@ public class CylinderPlatformGen : MonoBehaviour
             if (isValid)
             {
                 angles.Add(newAngle);
+                Debug.Log($"  Ángulo aceptado: {newAngle}");
             }
         }
 
-        // Si no se pudieron generar todos los angulos (caso extremo), forzar el resto
-        while (angles.Count < count)
-        {
-            float forcedAngle = Random.Range(0f, 360f);
-            angles.Add(forcedAngle);
-            Debug.LogWarning($"No se pudo generar ángulo con separación mínima, usando ángulo forzado: {forcedAngle}");
-        }
+        Debug.Log($"Ángulos finales generados: {string.Join(", ", angles)}");
 
         return angles;
     }
@@ -229,6 +365,11 @@ public class CylinderPlatformGen : MonoBehaviour
     public GameObject GetSelectedCylinder()
     {
         return selectedCylinder;
+    }
+
+    public Vector3 GetPlatformBasePosition()
+    {
+        return platformBasePosition;
     }
 
     // Metodo para obtener el radio del cilindro (usado por el renderer)

@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 6673752669631025628}
   - component: {fileID: 2837516085133824591}
   - component: {fileID: 5296325258803550686}
+  - component: {fileID: 5049539423381771475}
   m_Layer: 0
   m_Name: Cylinder 3
   m_TagString: Untagged
@@ -29,7 +30,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1.4773, y: 1.4773, z: 1.4773}
+  m_LocalScale: {x: 5.5, y: 5.5, z: 5.5}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -114,3 +115,17 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
+--- !u!114 &5049539423381771475
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2272158794208233807}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db832cf306fd4a44d94dda6104f8ccc3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CylinderData
+  altura: 10
+  radio: 5
