@@ -382,7 +382,7 @@ Transform:
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.68, z: -6.2599993}
+  m_LocalPosition: {x: 0, y: 0.68, z: -14.599999}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -846,10 +846,53 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CylinderRender
   platformGen: {fileID: 607208734}
-  platformPrefab: {fileID: 358911229342668057, guid: 2f9e55dcd15165345b976611f8676f09, type: 3}
+  platformRules:
+  - prefab: {fileID: 358911229342668057, guid: 2f9e55dcd15165345b976611f8676f09, type: 3}
+    platformName: Normal
+    exactCount: 6
+    limitPerLevel: 0
+    maxPerLevel: 0
+    restrictToLevels: 0
+    minLevel: 0
+    maxLevel: 0
+    currentCount: 0
+    currentLevelCount: 0
+    isSaturated: 0
+  - prefab: {fileID: 358911229342668057, guid: f456bd6439043e948961ecc17d794513, type: 3}
+    platformName: Spawn
+    exactCount: 1
+    limitPerLevel: 0
+    maxPerLevel: 0
+    restrictToLevels: 0
+    minLevel: 0
+    maxLevel: 0
+    currentCount: 0
+    currentLevelCount: 0
+    isSaturated: 0
+  - prefab: {fileID: 358911229342668057, guid: b157752d0a216bc48bd15d2425871c81, type: 3}
+    platformName: Traps
+    exactCount: 5
+    limitPerLevel: 0
+    maxPerLevel: 0
+    restrictToLevels: 0
+    minLevel: 0
+    maxLevel: 0
+    currentCount: 0
+    currentLevelCount: 0
+    isSaturated: 0
+  - prefab: {fileID: 358911229342668057, guid: e13db516d1163d848b8b8b65f353f57e, type: 3}
+    platformName: Testers
+    exactCount: 6
+    limitPerLevel: 0
+    maxPerLevel: 0
+    restrictToLevels: 0
+    minLevel: 0
+    maxLevel: 0
+    currentCount: 0
+    currentLevelCount: 0
+    isSaturated: 0
   platformScale: 1
   heightOffset: 0
-  showGizmos: 0
 --- !u!1 &640958389
 GameObject:
   m_ObjectHideFlags: 0
@@ -979,7 +1022,7 @@ Transform:
   m_GameObject: {fileID: 859209296}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.38, z: -4.66}
+  m_LocalPosition: {x: 0, y: 0.38, z: -13}
   m_LocalScale: {x: 0.3, y: 0.3, z: 0.3}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1274,7 +1317,7 @@ Transform:
   m_GameObject: {fileID: 1780681056}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.68, z: -6.2599993}
+  m_LocalPosition: {x: 0, y: 0.68, z: -14.599999}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

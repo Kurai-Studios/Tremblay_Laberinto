@@ -1,17 +1,51 @@
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.ProBuilder.MeshOperations;
+
+[System.Serializable]
+public class PlatformRule
+{
+    [Header("Tipo de Plataforma")]
+    public GameObject prefab;
+    public string platformName = "Normal";
+
+    [Header("Cantidades Exactas")]
+    public int exactCount = 5;
+
+    [Header("Restricciones (Opcional)")]
+    [Tooltip("Si se activa, limita cuántas pueden aparecer por nivel")]
+    public bool limitPerLevel = false;
+    [Range(0, 10)]
+    public int maxPerLevel = 1;
+
+    [Header("Niveles Específicos (Opcional)")]
+    [Tooltip("Si se activa, solo aparece en ciertos niveles")]
+    public bool restrictToLevels = false;
+    public int minLevel = 0;
+    public int maxLevel = 10;
+
+    // Contadores (se usan durante la generación)
+    [HideInInspector] public int currentCount = 0;
+    [HideInInspector] public int currentLevelCount = 0;
+    [HideInInspector] public bool isSaturated = false;
+}
 
 public class CylinderRender : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] CylinderPlatformGen platformGen;
-    [SerializeField] GameObject platformPrefab;
+
+    [Header("Platform Rules")]
+    public PlatformRule[] platformRules;
 
     [Header("Platform Settings")]
     public float platformScale = 1f;
     public float heightOffset = 0f;  // Desplazamiento vertical desde la base del cilindro
 
-    [Header("Debug")]
-    public bool showGizmos = false;
+    /*[Header("Debug")]
+    public bool showGizmos = false;*/
+
+    private List<PlatformRule> availableRules = new List<PlatformRule>();
 
     private void Start()
     {
@@ -28,11 +62,13 @@ public class CylinderRender : MonoBehaviour
             return;
         }
 
-        if (platformPrefab == null)
+        if (platformRules == null || platformRules.Length == 0)
         {
             Debug.LogError("PlatformPrefab no asignado en PlatformRenderer");
             return;
         }
+
+        ResetCounters();
 
         // Obtener los datos de las plataformas
         TowerPlatform[,] platforms = platformGen.GetPlatforms();
@@ -63,18 +99,48 @@ public class CylinderRender : MonoBehaviour
             // El cilindro se instancia en el centro (0,0,0)
         }
 
+        int totalPlatforms = CountTotalPlatforms(platforms);
+        int totalAssigned = 0;
+
+        foreach (var rule in platformRules)
+        {
+            totalAssigned += rule.exactCount;
+        }
+
+        // Verificar que el total de plataformas asignadas no exceda el total disponible
+        if (totalAssigned > totalPlatforms)
+        {
+            Debug.LogWarning($"¡Cuidado! Has asignado {totalAssigned} plataformas pero solo hay {totalPlatforms} espacios. Algunas no se podrán generar.");
+        }
+        else if (totalAssigned < totalPlatforms)
+        {
+            Debug.Log($"Has asignado {totalAssigned} plataformas de {totalPlatforms} totales. El resto serán plataformas por defecto.");
+        }
+
         // Loop a traves de todos los niveles y plataformas
         int levelCount = platforms.GetLength(0);
         int maxPlatformsPerLevel = platforms.GetLength(1);
 
         for (int level = 0; level < levelCount; level++)
         {
+
+            ResetLevelCounters();
+
             for (int i = 0; i < maxPlatformsPerLevel; i++)
             {
                 TowerPlatform platformData = platforms[level, i];
                 if (platformData == null) continue;
 
-                GameObject newPlatform = Instantiate(platformPrefab, transform);
+                GameObject selectedPrefab = GetPrefabByExactCount(level);
+
+                if (selectedPrefab == null)
+                {
+                    // Si no hay prefab seleccionado, usar el primero de la lista
+                    selectedPrefab = platformRules[0].prefab;
+                    Debug.Log($"Usando prefab por defecto: {platformRules[0].platformName}");
+                }
+
+                GameObject newPlatform = Instantiate(selectedPrefab, transform);
                 newPlatform.transform.localScale = Vector3.one * platformScale;
 
                 CylinderPlatformObj platformCell = newPlatform.GetComponent<CylinderPlatformObj>();
@@ -87,10 +153,106 @@ public class CylinderRender : MonoBehaviour
                 
                 platformCell.Init(platformData, cylinderRadius, heightOffset,
                                  platformGen.levelHeight, basePosition);
+
+                UpdateCounters(selectedPrefab);
             }
         }
 
+        foreach (var rule in platformRules)
+        {
+            Debug.Log($"{rule.platformName}: {rule.currentCount} / {rule.exactCount} plataformas generadas");
+        }
+
         Debug.Log($"Torre generada: {levelCount} niveles, {CountTotalPlatforms(platforms)} plataformas totales");
+    }
+
+    GameObject GetPrefabByExactCount(int currentLevel)
+    {
+        availableRules.Clear();
+
+        foreach (var rule in platformRules)
+        {
+            // Verificar si el prefab está asignado
+            if (rule.prefab == null)
+            {
+                Debug.LogWarning($"Regla '{rule.platformName}' no tiene prefab asignado");
+                continue;
+            }
+
+            // Verificar si ya alcanzó su límite
+            if (rule.isSaturated)
+            {
+                Debug.Log($"Regla '{rule.platformName}' ya alcanzó su límite de {rule.exactCount}");
+                continue;
+            }
+
+            // Verificar restricción de nivel
+            if (rule.restrictToLevels)
+            {
+                if (currentLevel < rule.minLevel || currentLevel > rule.maxLevel)
+                {
+                    Debug.Log($"Regla '{rule.platformName}' no disponible en nivel {currentLevel} (rango: {rule.minLevel}-{rule.maxLevel})");
+                    continue;
+                }
+            }
+
+            // Verificar límite por nivel
+            if (rule.limitPerLevel && rule.currentLevelCount >= rule.maxPerLevel)
+            {
+                Debug.Log($"Regla '{rule.platformName}' alcanzó su límite por nivel ({rule.maxPerLevel}) en nivel {currentLevel}");
+                continue;
+            }
+
+            // Añadir a disponibles
+            availableRules.Add(rule);
+        }
+
+        // Si no hay reglas disponibles, retornar null
+        if (availableRules.Count == 0)
+        {
+            return null;
+        }
+
+        int randomIndex = Random.Range(0, availableRules.Count);
+        return availableRules[randomIndex].prefab;
+    }
+
+    void ResetCounters()
+    {
+        foreach (var rule in platformRules)
+        {
+            rule.currentCount = 0;
+            rule.currentLevelCount = 0;
+            rule.isSaturated = false;
+        }
+    }
+
+    void ResetLevelCounters()
+    {
+        foreach (var rule in platformRules)
+        {
+            rule.currentLevelCount = 0;
+        }
+    }
+
+    void UpdateCounters(GameObject prefab)
+    {
+        foreach (var rule in platformRules)
+        {
+            if (rule.prefab == prefab)
+            {
+                rule.currentCount++;
+                rule.currentLevelCount++;
+
+                // Verificar si ya alcanzó su límite
+                if (rule.currentCount >= rule.exactCount)
+                {
+                    rule.isSaturated = true;
+                    Debug.Log($"✅ Regla '{rule.platformName}' completó su límite de {rule.exactCount}");
+                }
+                break;
+            }
+        }
     }
 
     // Cuenta el número total de plataformas
