@@ -22,7 +22,7 @@ public class CylinderData : MonoBehaviour
         }
 
         // usar la posición del cilindro
-        Debug.LogWarning($"No hay platformStartPoint asignado en {gameObject.name}, usando transform.position");
+        //Debug.LogWarning($"No hay platformStartPoint asignado en {gameObject.name}, usando transform.position");
         return transform.position;
     }
 

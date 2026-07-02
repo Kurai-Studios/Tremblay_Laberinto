@@ -790,6 +790,7 @@ GameObject:
   - component: {fileID: 607208735}
   - component: {fileID: 607208734}
   - component: {fileID: 607208736}
+  - component: {fileID: 607208737}
   m_Layer: 0
   m_Name: CylinderPlatTester
   m_TagString: Untagged
@@ -809,15 +810,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fcb000a695f17c347b4b7560f731976a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CylinderPlatformGen
-  minPlatformsPerLevel: 2
-  maxPlatformsPerLevel: 4
+  minPlatformsPerLevel: 4
+  maxPlatformsPerLevel: 8
   levelHeight: 2
   minAngleSeparation: 30
   cylinderPrefabs:
-  - {fileID: 2606996240864800789, guid: d89e34693d9427242a793453470462a4, type: 3}
-  - {fileID: 4790758439734709216, guid: 2928a08eafb9667439fdbb9c70a41760, type: 3}
-  - {fileID: 1080729184369340795, guid: a10901f5aa468ef488755147e7a742df, type: 3}
-  - {fileID: 4813324487981402418, guid: 54622700fc0a01f40b1bdfe8edb26fc4, type: 3}
+  - {fileID: 2855397460134390941, guid: ad82f64fb30e68a41b89ec47e2d3326e, type: 3}
+  - {fileID: 2855397460134390941, guid: 8b7f85b84b97dd047a3ec4d70d5ea3da, type: 3}
+  - {fileID: 2855397460134390941, guid: ab2c41c53f34c1148a452895c8db2e30, type: 3}
+  - {fileID: 2855397460134390941, guid: 3c265beedc0789947b668011adff1148, type: 3}
 --- !u!4 &607208735
 Transform:
   m_ObjectHideFlags: 0
@@ -847,7 +848,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CylinderRender
   platformGen: {fileID: 607208734}
   platformRules:
-  - prefab: {fileID: 358911229342668057, guid: 2f9e55dcd15165345b976611f8676f09, type: 3}
+  - prefab: {fileID: 5721999424188059987, guid: a6184de758ffd7e4c9244a366177289c, type: 3}
     platformName: Normal
     exactCount: 6
     limitPerLevel: 0
@@ -858,7 +859,7 @@ MonoBehaviour:
     currentCount: 0
     currentLevelCount: 0
     isSaturated: 0
-  - prefab: {fileID: 358911229342668057, guid: f456bd6439043e948961ecc17d794513, type: 3}
+  - prefab: {fileID: 5721999424188059987, guid: 1697ee733ad02714698ced087f190d93, type: 3}
     platformName: Spawn
     exactCount: 1
     limitPerLevel: 0
@@ -869,7 +870,7 @@ MonoBehaviour:
     currentCount: 0
     currentLevelCount: 0
     isSaturated: 0
-  - prefab: {fileID: 358911229342668057, guid: b157752d0a216bc48bd15d2425871c81, type: 3}
+  - prefab: {fileID: 5721999424188059987, guid: e9afa01f168a11c409fc2912a2a07057, type: 3}
     platformName: Traps
     exactCount: 5
     limitPerLevel: 0
@@ -880,7 +881,7 @@ MonoBehaviour:
     currentCount: 0
     currentLevelCount: 0
     isSaturated: 0
-  - prefab: {fileID: 358911229342668057, guid: e13db516d1163d848b8b8b65f353f57e, type: 3}
+  - prefab: {fileID: 5721999424188059987, guid: 710f7597537c74e4daa5389d613d8c0b, type: 3}
     platformName: Testers
     exactCount: 6
     limitPerLevel: 0
@@ -893,6 +894,23 @@ MonoBehaviour:
     isSaturated: 0
   platformScale: 1
   heightOffset: 0
+--- !u!114 &607208737
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 607208733}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d3d51d2ac8c9cde4999a3f15d37e1b8a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RuleManager
+  placementRules:
+  - {fileID: 11400000, guid: 2bd8e95b97a977d489dea656a388f4ba, type: 2}
+  - {fileID: 11400000, guid: 2bd8e95b97a977d489dea656a388f4ba, type: 2}
+  cylinderRadius: 5
+  levelHeight: 3
 --- !u!1 &640958389
 GameObject:
   m_ObjectHideFlags: 0

@@ -38,7 +38,7 @@ public class CylinderPlatformObj : MonoBehaviour
     Vector3 CalculateWorldPosition(float angle, int level)
     {
 
-        Debug.Log($"Calculando posición - Ángulo: {angle}, Nivel: {level}");
+        //Debug.Log($"Calculando posición - Ángulo: {angle}, Nivel: {level}");
 
         // Convertir angulo a radianes
         float angleRad = angle * Mathf.Deg2Rad;
@@ -53,7 +53,7 @@ public class CylinderPlatformObj : MonoBehaviour
             basePosition.y + localY,
             basePosition.z + localZ );
 
-        Debug.Log($"Posición calculada: {position}");
+        //Debug.Log($"Posición calculada: {position}");
 
         return position;
     }

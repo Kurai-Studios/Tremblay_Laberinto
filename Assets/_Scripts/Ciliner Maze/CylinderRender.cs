@@ -58,13 +58,13 @@ public class CylinderRender : MonoBehaviour
         // Validar referencias
         if (platformGen == null)
         {
-            Debug.LogError("PlatformGenerator no asignado en PlatformRenderer");
+            //Debug.LogError("PlatformGenerator no asignado en PlatformRenderer");
             return;
         }
 
         if (platformRules == null || platformRules.Length == 0)
         {
-            Debug.LogError("PlatformPrefab no asignado en PlatformRenderer");
+            //Debug.LogError("PlatformPrefab no asignado en PlatformRenderer");
             return;
         }
 
@@ -80,14 +80,14 @@ public class CylinderRender : MonoBehaviour
 
         Vector3 basePosition = platformGen.GetPlatformBasePosition();
 
-        Debug.Log($"Renderizando plataformas desde: {basePosition}");
-        Debug.Log($"Radio del cilindro: {cylinderRadius}");
-        Debug.Log($"Total de niveles: {platforms.GetLength(0)}");
+        //Debug.Log($"Renderizando plataformas desde: {basePosition}");
+        //Debug.Log($"Radio del cilindro: {cylinderRadius}");
+        //Debug.Log($"Total de niveles: {platforms.GetLength(0)}");
 
         // Validar que hay datos
         if (platforms == null || platforms.Length == 0)
         {
-            Debug.LogWarning("No se generaron plataformas");
+            //Debug.LogWarning("No se generaron plataformas");
             return;
         }
 
@@ -110,11 +110,11 @@ public class CylinderRender : MonoBehaviour
         // Verificar que el total de plataformas asignadas no exceda el total disponible
         if (totalAssigned > totalPlatforms)
         {
-            Debug.LogWarning($"¡Cuidado! Has asignado {totalAssigned} plataformas pero solo hay {totalPlatforms} espacios. Algunas no se podrán generar.");
+            //Debug.LogWarning($"¡Cuidado! Has asignado {totalAssigned} plataformas pero solo hay {totalPlatforms} espacios. Algunas no se podrán generar.");
         }
         else if (totalAssigned < totalPlatforms)
         {
-            Debug.Log($"Has asignado {totalAssigned} plataformas de {totalPlatforms} totales. El resto serán plataformas por defecto.");
+            //Debug.Log($"Has asignado {totalAssigned} plataformas de {totalPlatforms} totales. El resto serán plataformas por defecto.");
         }
 
         // Loop a traves de todos los niveles y plataformas
@@ -137,7 +137,7 @@ public class CylinderRender : MonoBehaviour
                 {
                     // Si no hay prefab seleccionado, usar el primero de la lista
                     selectedPrefab = platformRules[0].prefab;
-                    Debug.Log($"Usando prefab por defecto: {platformRules[0].platformName}");
+                    //Debug.Log($"Usando prefab por defecto: {platformRules[0].platformName}");
                 }
 
                 GameObject newPlatform = Instantiate(selectedPrefab, transform);
@@ -146,7 +146,7 @@ public class CylinderRender : MonoBehaviour
                 CylinderPlatformObj platformCell = newPlatform.GetComponent<CylinderPlatformObj>();
                 if (platformCell == null)
                 {
-                    Debug.LogError($"PlatformPrefab no tiene componente PlatformCellObj");
+                    //Debug.LogError($"PlatformPrefab no tiene componente PlatformCellObj");
                     continue;
                 }
 
@@ -160,10 +160,10 @@ public class CylinderRender : MonoBehaviour
 
         foreach (var rule in platformRules)
         {
-            Debug.Log($"{rule.platformName}: {rule.currentCount} / {rule.exactCount} plataformas generadas");
+            //Debug.Log($"{rule.platformName}: {rule.currentCount} / {rule.exactCount} plataformas generadas");
         }
 
-        Debug.Log($"Torre generada: {levelCount} niveles, {CountTotalPlatforms(platforms)} plataformas totales");
+        //Debug.Log($"Torre generada: {levelCount} niveles, {CountTotalPlatforms(platforms)} plataformas totales");
     }
 
     GameObject GetPrefabByExactCount(int currentLevel)
@@ -175,14 +175,14 @@ public class CylinderRender : MonoBehaviour
             // Verificar si el prefab está asignado
             if (rule.prefab == null)
             {
-                Debug.LogWarning($"Regla '{rule.platformName}' no tiene prefab asignado");
+                //Debug.LogWarning($"Regla '{rule.platformName}' no tiene prefab asignado");
                 continue;
             }
 
             // Verificar si ya alcanzó su límite
             if (rule.isSaturated)
             {
-                Debug.Log($"Regla '{rule.platformName}' ya alcanzó su límite de {rule.exactCount}");
+                //Debug.Log($"Regla '{rule.platformName}' ya alcanzó su límite de {rule.exactCount}");
                 continue;
             }
 
@@ -191,7 +191,7 @@ public class CylinderRender : MonoBehaviour
             {
                 if (currentLevel < rule.minLevel || currentLevel > rule.maxLevel)
                 {
-                    Debug.Log($"Regla '{rule.platformName}' no disponible en nivel {currentLevel} (rango: {rule.minLevel}-{rule.maxLevel})");
+                    //Debug.Log($"Regla '{rule.platformName}' no disponible en nivel {currentLevel} (rango: {rule.minLevel}-{rule.maxLevel})");
                     continue;
                 }
             }
@@ -199,7 +199,7 @@ public class CylinderRender : MonoBehaviour
             // Verificar límite por nivel
             if (rule.limitPerLevel && rule.currentLevelCount >= rule.maxPerLevel)
             {
-                Debug.Log($"Regla '{rule.platformName}' alcanzó su límite por nivel ({rule.maxPerLevel}) en nivel {currentLevel}");
+                //Debug.Log($"Regla '{rule.platformName}' alcanzó su límite por nivel ({rule.maxPerLevel}) en nivel {currentLevel}");
                 continue;
             }
 
@@ -248,7 +248,7 @@ public class CylinderRender : MonoBehaviour
                 if (rule.currentCount >= rule.exactCount)
                 {
                     rule.isSaturated = true;
-                    Debug.Log($"✅ Regla '{rule.platformName}' completó su límite de {rule.exactCount}");
+                    //Debug.Log($"✅ Regla '{rule.platformName}' completó su límite de {rule.exactCount}");
                 }
                 break;
             }

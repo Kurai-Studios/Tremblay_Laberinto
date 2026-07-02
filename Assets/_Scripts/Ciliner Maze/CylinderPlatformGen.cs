@@ -67,27 +67,27 @@ public class CylinderPlatformGen : MonoBehaviour
         cylinderHeight = GetCylinderHeight(selectedCylinder);
         cylinderRadius = GetCylinderRadius(selectedCylinder);
 
-        Debug.Log($"Altura del cilindro: {cylinderHeight}");
-        Debug.Log($"Radio del cilindro: {cylinderRadius}");
-        Debug.Log($"Level Height: {levelHeight}");
+        //Debug.Log($"Altura del cilindro: {cylinderHeight}");
+        //Debug.Log($"Radio del cilindro: {cylinderRadius}");
+        //Debug.Log($"Level Height: {levelHeight}");
 
         CylinderData info = selectedCylinder.GetComponent<CylinderData>();
         if (info != null && info.platformStartPoint != null)
         {
             platformBasePosition = info.platformStartPoint.transform.position;
-            Debug.Log($"StartPoint position: {platformBasePosition}");
+            //Debug.Log($"StartPoint position: {platformBasePosition}");
         }
         else
         {
             platformBasePosition = Vector3.zero;
-            Debug.LogWarning("No hay StartPoint asignado, usando 0,0,0");
+            //Debug.LogWarning("No hay StartPoint asignado, usando 0,0,0");
         }
 
         // Calcular numero de niveles basado en la altura
         totalLevels = Mathf.FloorToInt(cylinderHeight / levelHeight);
         if (totalLevels < 1) totalLevels = 1;
 
-        Debug.Log($"Total de niveles calculados: {totalLevels}");
+        //Debug.Log($"Total de niveles calculados: {totalLevels}");
 
         // Inicializar el array de plataformas
         List<TowerPlatform[]> platformList = new List<TowerPlatform[]>();
@@ -123,7 +123,7 @@ public class CylinderPlatformGen : MonoBehaviour
     {
         if (cylinderPrefabs == null || cylinderPrefabs.Length < 4)
         {
-            Debug.LogError("Se necesitan al menos 4 prefabs de cilindro en cylinderPrefabs");
+           // Debug.LogError("Se necesitan al menos 4 prefabs de cilindro en cylinderPrefabs");
             return null;
         }
 
@@ -136,14 +136,14 @@ public class CylinderPlatformGen : MonoBehaviour
     {
         if (cylinder == null)
         {
-            Debug.LogError("Cylinder es null");
+            //Debug.LogError("Cylinder es null");
             return 10f;
         }
 
         CylinderData info = cylinder.GetComponent<CylinderData>();
         if (info != null)
         {
-            Debug.Log($"Altura obtenida via CilindroInfo: {info.altura}");
+            //Debug.Log($"Altura obtenida via CilindroInfo: {info.altura}");
             return info.altura;
         }
 
@@ -151,7 +151,7 @@ public class CylinderPlatformGen : MonoBehaviour
         info = cylinder.GetComponentInChildren<CylinderData>();
         if (info != null)
         {
-            Debug.Log($"Altura obtenida via CilindroInfo en hijo: {info.altura}");
+            //Debug.Log($"Altura obtenida via CilindroInfo en hijo: {info.altura}");
             return info.altura;
         }
 
@@ -160,7 +160,7 @@ public class CylinderPlatformGen : MonoBehaviour
         if (meshFilter != null && meshFilter.sharedMesh != null)
         {
             float height = meshFilter.sharedMesh.bounds.size.y;
-            Debug.Log($"Altura obtenida via MeshFilter: {height}");
+            //Debug.Log($"Altura obtenida via MeshFilter: {height}");
             return height;
         }
 
@@ -169,7 +169,7 @@ public class CylinderPlatformGen : MonoBehaviour
         if (meshFilter != null && meshFilter.sharedMesh != null)
         {
             float height = meshFilter.sharedMesh.bounds.size.y;
-            Debug.Log($"Altura obtenida via MeshFilter en hijo: {height}");
+            //Debug.Log($"Altura obtenida via MeshFilter en hijo: {height}");
             return height;
         }
 
@@ -178,7 +178,7 @@ public class CylinderPlatformGen : MonoBehaviour
         if (skinnedMesh != null && skinnedMesh.sharedMesh != null)
         {
             float height = skinnedMesh.sharedMesh.bounds.size.y;
-            Debug.Log($"Altura obtenida via SkinnedMeshRenderer: {height}");
+            //Debug.Log($"Altura obtenida via SkinnedMeshRenderer: {height}");
             return height;
         }
 
@@ -187,7 +187,7 @@ public class CylinderPlatformGen : MonoBehaviour
         if (renderer != null)
         {
             float height = renderer.bounds.size.y;
-            Debug.Log($"Altura obtenida via Renderer.bounds: {height}");
+            //Debug.Log($"Altura obtenida via Renderer.bounds: {height}");
             return height;
         }
 
@@ -195,11 +195,11 @@ public class CylinderPlatformGen : MonoBehaviour
         float scaleHeight = cylinder.transform.localScale.y;
         if (scaleHeight > 0)
         {
-            Debug.Log($"Usando escala local como altura: {scaleHeight}");
+            //Debug.Log($"Usando escala local como altura: {scaleHeight}");
             return scaleHeight;
         }
 
-        Debug.LogWarning($"No se pudo obtener la altura del cilindro {cylinder.name}, usando valor por defecto 10");
+        //Debug.LogWarning($"No se pudo obtener la altura del cilindro {cylinder.name}, usando valor por defecto 10");
         return 10f;
     }
 
@@ -208,21 +208,21 @@ public class CylinderPlatformGen : MonoBehaviour
     {
         if (cylinder == null)
         {
-            Debug.LogError("Cylinder es null");
+            //Debug.LogError("Cylinder es null");
             return 5f; // Valor por defecto
         }
 
         CylinderData info = cylinder.GetComponent<CylinderData>();
         if (info != null)
         {
-            Debug.Log($"Radio obtenido via CilindroInfo: {info.radio}");
+            //Debug.Log($"Radio obtenido via CilindroInfo: {info.radio}");
             return info.radio;
         }
 
         info = cylinder.GetComponentInChildren<CylinderData>();
         if (info != null)
         {
-            Debug.Log($"Radio obtenido via CilindroInfo en hijo: {info.radio}");
+            //Debug.Log($"Radio obtenido via CilindroInfo en hijo: {info.radio}");
             return info.radio;
         }
 
@@ -233,7 +233,7 @@ public class CylinderPlatformGen : MonoBehaviour
         {
             Bounds bounds = meshFilter.sharedMesh.bounds;
             float radius = Mathf.Max(bounds.size.x, bounds.size.z) / 2f;
-            Debug.Log($"Radio obtenido via MeshFilter: {radius}");
+            //Debug.Log($"Radio obtenido via MeshFilter: {radius}");
             return radius;
         }
 
@@ -242,7 +242,7 @@ public class CylinderPlatformGen : MonoBehaviour
         {
             Bounds bounds = meshFilter.sharedMesh.bounds;
             float radius = Mathf.Max(bounds.size.x, bounds.size.z) / 2f;
-            Debug.Log($"Radio obtenido via MeshFilter en hijo: {radius}");
+            //Debug.Log($"Radio obtenido via MeshFilter en hijo: {radius}");
             return radius;
         }
 
@@ -251,7 +251,7 @@ public class CylinderPlatformGen : MonoBehaviour
         {
             Bounds bounds = skinnedMesh.sharedMesh.bounds;
             float radius = Mathf.Max(bounds.size.x, bounds.size.z) / 2f;
-            Debug.Log($"Radio obtenido via SkinnedMeshRenderer: {radius}");
+            //Debug.Log($"Radio obtenido via SkinnedMeshRenderer: {radius}");
             return radius;
         }
 
@@ -260,7 +260,7 @@ public class CylinderPlatformGen : MonoBehaviour
         {
             Bounds bounds = renderer.bounds;
             float radius = Mathf.Max(bounds.size.x, bounds.size.z) / 2f;
-            Debug.Log($"Radio obtenido via Renderer.bounds: {radius}");
+            //Debug.Log($"Radio obtenido via Renderer.bounds: {radius}");
             return radius;
         }
 
@@ -269,7 +269,7 @@ public class CylinderPlatformGen : MonoBehaviour
         float radio = Mathf.Max(scaleX, scaleZ) / 2f;
         if (radio > 0)
         {
-            Debug.Log($"Usando escala local como radio: {radio}");
+            //Debug.Log($"Usando escala local como radio: {radio}");
             return radio;
         }
 
@@ -286,7 +286,7 @@ public class CylinderPlatformGen : MonoBehaviour
         if (count == 1)
         {
             float angle = Random.Range(0f, 360f);
-            Debug.Log($"Generando 1 ángulo: {angle}");
+            //Debug.Log($"Generando 1 ángulo: {angle}");
             angles.Add(angle);
             return angles;
         }
@@ -300,7 +300,7 @@ public class CylinderPlatformGen : MonoBehaviour
             attempts++;
             float newAngle = Random.Range(0f, 360f);
 
-            Debug.Log($"Intento {attempts}: Generando ángulo {newAngle}");
+            //Debug.Log($"Intento {attempts}: Generando ángulo {newAngle}");
 
             bool isValid = true;
             foreach (float existingAngle in angles)
@@ -308,12 +308,12 @@ public class CylinderPlatformGen : MonoBehaviour
                 float difference = Mathf.Abs(newAngle - existingAngle);
                 difference = Mathf.Min(difference, 360f - difference);
 
-                Debug.Log($"  Comparando con {existingAngle}: diferencia {difference}, mínima {minAngleSeparation}");
+                //Debug.Log($"  Comparando con {existingAngle}: diferencia {difference}, mínima {minAngleSeparation}");
 
                 if (difference < minAngleSeparation)
                 {
                     isValid = false;
-                    Debug.Log($"  Ángulo rechazado - demasiado cerca");
+                    //Debug.Log($"  Ángulo rechazado - demasiado cerca");
                     break;
                 }
             }
@@ -321,11 +321,11 @@ public class CylinderPlatformGen : MonoBehaviour
             if (isValid)
             {
                 angles.Add(newAngle);
-                Debug.Log($"  Ángulo aceptado: {newAngle}");
+                //Debug.Log($"  Ángulo aceptado: {newAngle}");
             }
         }
 
-        Debug.Log($"Ángulos finales generados: {string.Join(", ", angles)}");
+        //Debug.Log($"Ángulos finales generados: {string.Join(", ", angles)}");
 
         return angles;
     }

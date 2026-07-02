@@ -5601,7 +5601,7 @@ GameObject:
   - component: {fileID: 7790157522922996698}
   - component: {fileID: -1088691263463742270}
   m_Layer: 0
-  m_Name: OrigenCilindroPlataforma
+  m_Name: OrigenCilindroPlataforma 2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
