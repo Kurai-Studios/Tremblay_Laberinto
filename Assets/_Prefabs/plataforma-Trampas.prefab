@@ -302,7 +302,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: c22777d6e868e4f2fb421913386b154e, type: 2}
+  - {fileID: 2100000, guid: 30a8575e1d4cc4e01a88ffbf4f973d80, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -367,7 +367,7 @@ GameObject:
   - component: {fileID: 8557721576242731706}
   - component: {fileID: 8559225880211341070}
   m_Layer: 0
-  m_Name: plataforma-test
+  m_Name: plataforma-Trampas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

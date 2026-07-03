@@ -34,6 +34,7 @@ public class CylinderRender : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] CylinderPlatformGen platformGen;
+    [SerializeField] RuleManager ruleManager;
 
     [Header("Platform Rules")]
     public PlatformRule[] platformRules;
@@ -69,6 +70,15 @@ public class CylinderRender : MonoBehaviour
         }
 
         ResetCounters();
+
+        if (ruleManager != null)
+        {
+            ruleManager.ResetRules();
+
+            float radius = platformGen.GetCylinderRadius();
+            float height = platformGen.GetCylinderHeight();
+            ruleManager.UpdateCylinderConfig(radius, height);
+        }
 
         // Obtener los datos de las plataformas
         TowerPlatform[,] platforms = platformGen.GetPlatforms();
@@ -131,7 +141,7 @@ public class CylinderRender : MonoBehaviour
                 TowerPlatform platformData = platforms[level, i];
                 if (platformData == null) continue;
 
-                GameObject selectedPrefab = GetPrefabByExactCount(level);
+                GameObject selectedPrefab = SelectPrefabWithRules(level, i, platforms);
 
                 if (selectedPrefab == null)
                 {
@@ -154,67 +164,95 @@ public class CylinderRender : MonoBehaviour
                 platformCell.Init(platformData, cylinderRadius, heightOffset,
                                  platformGen.levelHeight, basePosition);
 
+                if (ruleManager != null)
+                {
+                    ruleManager.RegisterPlacedPlatform(
+                        selectedPrefab,
+                        level,
+                        i,
+                        platformData.angle,
+                        newPlatform.transform.position
+                    );
+                }
+
                 UpdateCounters(selectedPrefab);
             }
         }
 
+        Debug.Log($"=== ESTADÍSTICAS DE GENERACIÓN ===");
         foreach (var rule in platformRules)
         {
-            //Debug.Log($"{rule.platformName}: {rule.currentCount} / {rule.exactCount} plataformas generadas");
+            Debug.Log($"{rule.platformName}: {rule.currentCount} / {rule.exactCount} plataformas generadas");
+        }
+
+        if (ruleManager != null)
+        {
+            Debug.Log(ruleManager.GetRuleStatistics());
         }
 
         //Debug.Log($"Torre generada: {levelCount} niveles, {CountTotalPlatforms(platforms)} plataformas totales");
     }
 
-    GameObject GetPrefabByExactCount(int currentLevel)
+    GameObject SelectPrefabWithRules(int level, int index, TowerPlatform[,] allPlatforms)
     {
-        availableRules.Clear();
+        List<GameObject> availablePrefabs = new List<GameObject>();
 
         foreach (var rule in platformRules)
         {
-            // Verificar si el prefab está asignado
-            if (rule.prefab == null)
-            {
-                //Debug.LogWarning($"Regla '{rule.platformName}' no tiene prefab asignado");
-                continue;
-            }
+            if (rule.prefab == null) continue;
+            if (rule.isSaturated) continue;
 
-            // Verificar si ya alcanzó su límite
-            if (rule.isSaturated)
-            {
-                //Debug.Log($"Regla '{rule.platformName}' ya alcanzó su límite de {rule.exactCount}");
-                continue;
-            }
-
-            // Verificar restricción de nivel
             if (rule.restrictToLevels)
             {
-                if (currentLevel < rule.minLevel || currentLevel > rule.maxLevel)
-                {
-                    //Debug.Log($"Regla '{rule.platformName}' no disponible en nivel {currentLevel} (rango: {rule.minLevel}-{rule.maxLevel})");
-                    continue;
-                }
+                if (level < rule.minLevel || level > rule.maxLevel) continue;
             }
 
-            // Verificar límite por nivel
-            if (rule.limitPerLevel && rule.currentLevelCount >= rule.maxPerLevel)
-            {
-                //Debug.Log($"Regla '{rule.platformName}' alcanzó su límite por nivel ({rule.maxPerLevel}) en nivel {currentLevel}");
-                continue;
-            }
+            if (rule.limitPerLevel && rule.currentLevelCount >= rule.maxPerLevel) continue;
 
-            // Añadir a disponibles
-            availableRules.Add(rule);
+            availablePrefabs.Add(rule.prefab);
         }
 
-        // Si no hay reglas disponibles, retornar null
-        if (availableRules.Count == 0)
+        if (availablePrefabs.Count == 0) return null;
+
+        for (int i = 0; i < availablePrefabs.Count * 2; i++)
         {
-            return null;
+            int a = Random.Range(0, availablePrefabs.Count);
+            int b = Random.Range(0, availablePrefabs.Count);
+            GameObject temp = availablePrefabs[a];
+            availablePrefabs[a] = availablePrefabs[b];
+            availablePrefabs[b] = temp;
         }
 
-        int randomIndex = Random.Range(0, availableRules.Count);
-        return availableRules[randomIndex].prefab;
+        int maxAttempts = 50;
+        int attempts = 0;
+
+        while (attempts < maxAttempts && availablePrefabs.Count > 0)
+        {
+            attempts++;
+
+            int randomIndex = Random.Range(0, availablePrefabs.Count);
+            GameObject candidate = availablePrefabs[randomIndex];
+
+            if (ruleManager == null || ruleManager.CanPlacePlatform(candidate, level, index, allPlatforms))
+            {
+                
+                Debug.Log($"Prefab '{candidate.name}' seleccionado para nivel {level}, " +
+                             $"índice {index} (intento {attempts})");
+                
+                return candidate;
+            }
+            else
+            {
+                availablePrefabs.RemoveAt(randomIndex);
+
+                Debug.Log($"Prefab '{candidate.name}' rechazado por reglas en nivel {level}, " +
+                             $"índice {index} (intento {attempts})");
+            }
+        }
+
+        Debug.LogWarning($"No se encontró prefab que cumpla reglas en nivel {level}, índice {index}");
+        
+        return null;
     }
 
     void ResetCounters()
@@ -278,6 +316,11 @@ public class CylinderRender : MonoBehaviour
         {
             DestroyImmediate(transform.GetChild(i).gameObject);
         }
+
+        ResetCounters();
+
+        if (ruleManager != null)
+            ruleManager.ResetRules();
     }
 
     // Regenera la torre

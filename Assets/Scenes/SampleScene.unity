@@ -847,6 +847,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CylinderRender
   platformGen: {fileID: 607208734}
+  ruleManager: {fileID: 607208737}
   platformRules:
   - prefab: {fileID: 5721999424188059987, guid: a6184de758ffd7e4c9244a366177289c, type: 3}
     platformName: Normal
@@ -872,9 +873,9 @@ MonoBehaviour:
     isSaturated: 0
   - prefab: {fileID: 5721999424188059987, guid: e9afa01f168a11c409fc2912a2a07057, type: 3}
     platformName: Traps
-    exactCount: 5
-    limitPerLevel: 0
-    maxPerLevel: 0
+    exactCount: 10
+    limitPerLevel: 1
+    maxPerLevel: 2
     restrictToLevels: 0
     minLevel: 0
     maxLevel: 0
@@ -883,9 +884,9 @@ MonoBehaviour:
     isSaturated: 0
   - prefab: {fileID: 5721999424188059987, guid: 710f7597537c74e4daa5389d613d8c0b, type: 3}
     platformName: Testers
-    exactCount: 6
-    limitPerLevel: 0
-    maxPerLevel: 0
+    exactCount: 10
+    limitPerLevel: 1
+    maxPerLevel: 2
     restrictToLevels: 0
     minLevel: 0
     maxLevel: 0
@@ -908,7 +909,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RuleManager
   placementRules:
   - {fileID: 11400000, guid: 2bd8e95b97a977d489dea656a388f4ba, type: 2}
-  - {fileID: 11400000, guid: 2bd8e95b97a977d489dea656a388f4ba, type: 2}
+  - {fileID: 11400000, guid: 2c7c60293f7892a45b81ffaa6f72cac2, type: 2}
   cylinderRadius: 5
   levelHeight: 3
 --- !u!1 &640958389

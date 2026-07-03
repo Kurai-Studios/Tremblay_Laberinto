@@ -367,7 +367,7 @@ GameObject:
   - component: {fileID: 8557721576242731706}
   - component: {fileID: 8559225880211341070}
   m_Layer: 0
-  m_Name: plataforma-test 1
+  m_Name: plataforma-Spawn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
