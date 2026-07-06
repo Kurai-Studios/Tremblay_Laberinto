@@ -1,10 +1,8 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-/// <summary>
-/// Regla: La plataforma NO puede estar cerca de otro tipo específico de plataforma.
-/// Ejemplo: "Las plataformas trampa no pueden estar cerca de otras trampas"
-/// </summary>
+// Regla: La plataforma NO puede estar cerca de otro tipo especifico de plataforma
+
 [CreateAssetMenu(
     fileName = "CannotBeNearPlatform",
     menuName = "Platform Rules/Cannot Be Near Platform"
@@ -128,13 +126,9 @@ public class CannotBeNearPlatform : PlacementRule
         return true;
     }
 
-    /// <summary>
-    /// Obtiene la altura de los niveles (valor por defecto o desde el generador)
-    /// </summary>
+    /// Obtiene la altura de los niveles
     private float GetLevelHeight()
     {
-        // Este valor debería venir del PlatformGenerator
-        // Por ahora usamos un valor por defecto
         return 3f;
     }
 
