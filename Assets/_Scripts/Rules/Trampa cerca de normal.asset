@@ -14,10 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MustBeNearPlatform
   ruleName: Trampa cerca de normal
   isActive: 1
+  showDebugLogs: 0
   targetPrefab: {fileID: 5721999424188059987, guid: a6184de758ffd7e4c9244a366177289c, type: 3}
   maxDistance: 5
   minNearbyCount: 1
   checkSameLevel: 1
-  checkAdjacentLevels: 1
+  checkAdjacentLevels: 0
   adjacentLevelsToCheck: 1
-  cylinderRadius: 5
+  cylinderRadius: 0

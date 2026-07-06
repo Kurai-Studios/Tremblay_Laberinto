@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LevelRestriction
   ruleName: Tests solo en pares
   isActive: 1
+  showDebugLogs: 0
   targetPrefab: {fileID: 5721999424188059987, guid: 710f7597537c74e4daa5389d613d8c0b, type: 3}
   applyToAll: 0
   minLevel: 0

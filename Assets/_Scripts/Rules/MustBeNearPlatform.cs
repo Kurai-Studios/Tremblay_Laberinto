@@ -42,7 +42,7 @@ public class MustBeNearPlatform : PlacementRule
         // Validar que el prefab objetivo este asignado
         if (targetPrefab == null)
         {
-            Debug.LogWarning($"Regla '{ruleName}': targetPrefab no asignado");
+            if (showDebugLogs) Debug.LogWarning($"Regla '{ruleName}': targetPrefab no asignado");
             return true;  // Si no hay objetivo, permitir
         }
 
@@ -67,7 +67,7 @@ public class MustBeNearPlatform : PlacementRule
                 if (distance <= maxDistance)
                 {
                     nearbyCount++;
-                    Debug.Log($"Regla '{ruleName}': Encontrada plataforma {targetPrefab.name} cerca (distancia {distance:F2})");
+                    if (showDebugLogs) Debug.Log($"Regla '{ruleName}': Encontrada plataforma {targetPrefab.name} cerca (distancia {distance:F2})");
                 }
             }
 
@@ -93,7 +93,7 @@ public class MustBeNearPlatform : PlacementRule
                         if (totalDistance <= maxDistance)
                         {
                             nearbyCount++;
-                            Debug.Log($"Regla '{ruleName}': Encontrada plataforma {targetPrefab.name} en nivel adyacente (distancia {totalDistance:F2})");
+                            if (showDebugLogs) Debug.Log($"Regla '{ruleName}': Encontrada plataforma {targetPrefab.name} en nivel adyacente (distancia {totalDistance:F2})");
                         }
                     }
                 }
@@ -103,9 +103,9 @@ public class MustBeNearPlatform : PlacementRule
         // Verificar si cumple con el minimo requerido
         bool result = nearbyCount >= minNearbyCount;
 
-        
-        
-            Debug.Log($"Regla '{ruleName}': {prefab.name} en nivel {level} - " +
+
+
+        if (showDebugLogs) Debug.Log($"Regla '{ruleName}': {prefab.name} en nivel {level} - " +
                      $"Cerca de {nearbyCount} plataformas {targetPrefab.name} " +
                      $"(mínimo {minNearbyCount}) => {(result ? "APROBADA" : "RECHAZADA")}");
         

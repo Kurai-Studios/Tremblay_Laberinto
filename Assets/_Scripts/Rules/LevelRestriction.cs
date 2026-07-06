@@ -64,19 +64,19 @@ public class LevelRestriction : PlacementRule
         {
             targetName = "TODOS (sin target)";
 
-            Debug.Log($"Regla '{ruleName}': targetPrefab vacío, aplicando a TODOS los prefabs");
+            if (showDebugLogs) Debug.Log($"Regla '{ruleName}': targetPrefab vacío, aplicando a TODOS los prefabs");
         }
 
         // 2. VERIFICAR RANGO DE NIVELES
         if (level < minLevel || level > maxLevel)
         {
 
-            Debug.Log($"Regla '{ruleName}': Nivel {level} fuera de rango " + $"({minLevel}-{maxLevel}) para {targetName}");
+            if (showDebugLogs) Debug.Log($"Regla '{ruleName}': Nivel {level} fuera de rango " + $"({minLevel}-{maxLevel}) para {targetName}");
 
             if (useDefaultInstead)
             {
-                
-                Debug.Log($"Regla '{ruleName}': Usando prefab por defecto en nivel {level}");
+
+                if (showDebugLogs) Debug.Log($"Regla '{ruleName}': Usando prefab por defecto en nivel {level}");
                 
                 return true;
             }
@@ -88,11 +88,11 @@ public class LevelRestriction : PlacementRule
         if (onlyEvenLevels && level % 2 != 0)
         {
 
-            Debug.Log($"Regla '{ruleName}': Nivel {level} no es par para {targetName}");
+            if (showDebugLogs) Debug.Log($"Regla '{ruleName}': Nivel {level} no es par para {targetName}");
 
             if (useDefaultInstead)
             {
-                Debug.Log($"Regla '{ruleName}': Usando prefab por defecto en nivel {level}");
+                if (showDebugLogs) Debug.Log($"Regla '{ruleName}': Usando prefab por defecto en nivel {level}");
 
                 return true;
             }
@@ -104,11 +104,11 @@ public class LevelRestriction : PlacementRule
         if (onlyOddLevels && level % 2 == 0)
         {
 
-            Debug.Log($"Regla '{ruleName}': Nivel {level} no es impar para {targetName}");          
+            if (showDebugLogs) Debug.Log($"Regla '{ruleName}': Nivel {level} no es impar para {targetName}");          
 
             if (useDefaultInstead)
             {
-                Debug.Log($"Regla '{ruleName}': Usando prefab por defecto en nivel {level}");
+                if (showDebugLogs) Debug.Log($"Regla '{ruleName}': Usando prefab por defecto en nivel {level}");
 
                 return true;
             }
@@ -122,7 +122,7 @@ public class LevelRestriction : PlacementRule
         if (onlyEvenLevels) details += " (par)";
         if (onlyOddLevels) details += " (impar)";
 
-        Debug.Log($"Regla '{ruleName}': Aprobada para {targetName} en {details}");
+        if (showDebugLogs) Debug.Log($"Regla '{ruleName}': Aprobada para {targetName} en {details}");
 
         return true;
     }

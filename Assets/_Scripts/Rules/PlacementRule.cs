@@ -8,6 +8,7 @@ public abstract class PlacementRule : ScriptableObject
     [Tooltip("Nombre descriptivo de la regla")]
     public string ruleName = "Nueva Regla";
     public bool isActive = true;
+    public bool showDebugLogs = true;
 
     // Verifica si la plataforma puede ser colocada en la posición dada.
     /// <param name="prefab">El prefab de la plataforma que se quiere colocar</param>
@@ -16,7 +17,7 @@ public abstract class PlacementRule : ScriptableObject
     /// <param name="existingPlatforms">Lista de plataformas ya colocadas</param>
     /// <param name="allPlatforms">Matriz completa de todas las plataformas</param>
     /// <returns>True si se puede colocar, False si no</returns>
-    
+
     public abstract bool CanPlace(
         GameObject prefab,
         int level,
