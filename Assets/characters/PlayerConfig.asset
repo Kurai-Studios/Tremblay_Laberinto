@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02c51f6e45f806447be6f50a6cd9bdeb, type: 3}
+  m_Name: PlayerConfig
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerConfig
+  walkSpeed: 3
+  sprintSpeed: 6
+  crouchSpeed: 1.5
+  rotationSmoothTime: 0.12
+  speedSmoothTime: 0.1
+  jumpHeight: 1.2
+  gravity: -15
+  fallMultiplier: 2.5
+  coyoteTime: 0.15
+  jumpBufferTime: 0.2
+  groundCheckRadius: 0.2
+  groundLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  standingHeight: 2
+  crouchHeight: 1.2
+  crouchCenterY: 0.6
+  standingCenterY: 1
+  slopeSlideSpeed: 5
+  ladderClimbSpeed: 1
