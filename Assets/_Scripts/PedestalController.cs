@@ -10,6 +10,7 @@ public class PedestalController : MonoBehaviour
     {
         public GameObject pedestal;
         public Transform placementPoint;
+        public string acceptedObjectId;
     }
 
     [SerializeField] List<PedestalEntry> pedestals = new List<PedestalEntry>();
@@ -19,14 +20,25 @@ public class PedestalController : MonoBehaviour
     [SerializeField] float interactionRange = 3f;
 
     [Header("Placement")]
-    [SerializeField] GameObject itemTemplate;
     [SerializeField] string dataFileName = "TestObj_data.json";
 
     Transform player;
+    readonly Dictionary<string, GameObject> placeableObjectsById = new Dictionary<string, GameObject>();
 
     void Start()
     {
         LogNames();
+        BuildPlaceableObjectRegistry();
+    }
+
+    void BuildPlaceableObjectRegistry()
+    {
+        placeableObjectsById.Clear();
+        foreach (TestObjInteractor interactor in FindObjectsByType<TestObjInteractor>(FindObjectsSortMode.None))
+        {
+            if (!string.IsNullOrEmpty(interactor.ObjectId))
+                placeableObjectsById[interactor.ObjectId] = interactor.gameObject;
+        }
     }
 
     void Update()
@@ -75,12 +87,6 @@ public class PedestalController : MonoBehaviour
             return;
         }
 
-        if (itemTemplate == null)
-        {
-            Debug.Log("No item template assigned to PedestalController.");
-            return;
-        }
-
         string path = Path.Combine(Application.persistentDataPath, dataFileName);
         if (!File.Exists(path))
         {
@@ -90,7 +96,19 @@ public class PedestalController : MonoBehaviour
 
         PlacedObjectData data = JsonUtility.FromJson<PlacedObjectData>(File.ReadAllText(path));
 
-        GameObject copy = Instantiate(itemTemplate, entry.placementPoint.position, Quaternion.Euler(data.rotation));
+        if (entry.acceptedObjectId != data.id)
+        {
+            Debug.LogWarning($"{entry.pedestal.name} only accepts '{entry.acceptedObjectId}', but tried to place '{data.id}'.");
+            return;
+        }
+
+        if (!placeableObjectsById.TryGetValue(data.id, out GameObject source))
+        {
+            Debug.Log($"No placeable object found in scene for id '{data.id}'.");
+            return;
+        }
+
+        GameObject copy = Instantiate(source, entry.placementPoint.position, Quaternion.Euler(data.rotation));
         copy.transform.localScale = data.scale;
         copy.name = string.IsNullOrEmpty(data.id) ? data.name : data.id;
         copy.SetActive(true);

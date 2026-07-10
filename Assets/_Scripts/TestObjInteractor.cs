@@ -12,6 +12,10 @@ public class TestObjInteractor : MonoBehaviour
     [SerializeField] string fileName = "TestObj_data.json";
     [SerializeField] string objectId = "TestObj";
 
+    public string ObjectId => objectId;
+
+    static TestObjInteractor lastPicked;
+
     Transform player;
 
     void Update()
@@ -49,6 +53,10 @@ public class TestObjInteractor : MonoBehaviour
 
         Debug.Log($"Exported {gameObject.name} data to {path}");
 
+        if (lastPicked != null)
+            lastPicked.gameObject.SetActive(true);
+
         gameObject.SetActive(false);
+        lastPicked = this;
     }
 }
