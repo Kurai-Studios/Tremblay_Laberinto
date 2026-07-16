@@ -26,9 +26,10 @@ MonoBehaviour:
   groundLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  standingHeight: 2
+  standingHeight: 1.6
   crouchHeight: 1.2
   crouchCenterY: 0.6
-  standingCenterY: 1
+  standingCenterY: 0.75
   slopeSlideSpeed: 5
   ladderClimbSpeed: 1
+  ladderFacingOffset: 180
