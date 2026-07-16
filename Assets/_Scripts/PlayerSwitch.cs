@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using Unity.Cinemachine;
 using System.Collections.Generic;
 
@@ -14,7 +15,7 @@ public class PlayerSwitch : MonoBehaviour
     [Header("Characters")]
     [SerializeField] private List<CharacterData> characters = new List<CharacterData>();
     [SerializeField] private int currentCharIndex = 0;
-    [SerializeField] private KeyCode switchKey = KeyCode.Tab;
+    [SerializeField] private Key switchKey = Key.Tab;
 
     [Header("Cinemachine Settings")]
     [SerializeField] private CinemachineCamera vCam;
@@ -38,7 +39,7 @@ public class PlayerSwitch : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(switchKey) && characters.Count > 0) SwitchToNextCharacter();
+        if (Keyboard.current != null && Keyboard.current[switchKey].wasPressedThisFrame && characters.Count > 0) SwitchToNextCharacter();
     }
 
     void SwitchToNextCharacter()
