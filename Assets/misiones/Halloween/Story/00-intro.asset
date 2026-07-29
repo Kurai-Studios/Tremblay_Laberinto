@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45b6d126be364064596a7235915301b7, type: 3}
+  m_Name: 00-intro
+  m_EditorClassIdentifier: Assembly-CSharp::StoryFragment
+  fragmentID: 00-intro
+  nombreFragmento: 
+  audioNarracion: {fileID: 8300000, guid: f7937831cff2238418281d918821c3a4, type: 3}
+  volumenAudio: 0.8
+  textoFragmento: 'It was Halloween night.
+
+    A group of children played around
+    the neighborhood, asking for candy and telling scary stories.
+
+    Among the
+    dares and giggles, one of them challenged a girl to light a candle at the entrance
+    of the old abandoned house at the edge of town.
+
+    The girl, determined to
+    prove her courage, took the candle and walked toward the porch.
+
+    But as
+    she stepped onto the old floorboards, they gave way beneath her feet
+
+    and
+    she fell into the dark cellar of the house.'
+  duracionTotal: 0
+  tiempoFadeIn: 0.5
+  tiempoFadeOut: 0.5
+  avanceAutomatico: 1
+  colorFondo: {r: 0, g: 0, b: 0, a: 0.85}
+  colorTexto: {r: 1, g: 1, b: 1, a: 1}
+  "tama\xF1oFuente": 24
+  usarTypewriter: 1
+  velocidadTypewriter: 18
+  efectoVisualPrefab: {fileID: 0}
+  imagenFondo: {fileID: 21300000, guid: de6f14cc8444a7f4e9a766d70653937a, type: 3}
+  "intensidadVi\xF1eta": 0.3
+  siguienteFragmento: {fileID: 11400000, guid: 7f64876d76e7ade42a83e8812ce82edc, type: 2}
+  delayAntesSiguiente: 0
+  categoria: 0
+  prioridad: 5

@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89fd470925eaa884386cbe8d241d6862, type: 3}
+  m_Name: 44
+  m_EditorClassIdentifier: 
+  descripcion: "Coloca el farol sobre la l\xE1pida y pon una flor.\r"
+  partes:
+  - tipo: 0
+    texto: Coloca el
+    idCorrecto: 
+  - tipo: 1
+    texto: farol
+    idCorrecto: farol
+  - tipo: 0
+    texto: sobre la
+    idCorrecto: 
+  - tipo: 1
+    texto: "l\xE1pida"
+    idCorrecto: lapida
+  - tipo: 0
+    texto: y pon una
+    idCorrecto: 
+  - tipo: 1
+    texto: flor
+    idCorrecto: flor
+  tipoActivacion: 2
+  objetosRequeridos: []
+  misionRequeridaID: 41
+  bloqueada: 1
+  descifrada: 0
+  completada: 0
+  misionID: 44
+  idObjetoDestino: lapida
+  idsObjetosCorrectos:
+  - flor
+  - farol
+  fragmentoAlDescifrar: {fileID: 0}
+  fragmentoAlCompletar: {fileID: 11400000, guid: 8a70f1d1930cda949abd55e0b805354b, type: 2}
+  reproducirFragmentoAutomaticamente: 1

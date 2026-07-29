@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89fd470925eaa884386cbe8d241d6862, type: 3}
+  m_Name: 11
+  m_EditorClassIdentifier: 
+  descripcion: "Golpear la mano con la v.\r"
+  partes:
+  - tipo: 0
+    texto: 'Golpear la '
+    idCorrecto: 
+  - tipo: 1
+    texto: mano
+    idCorrecto: mano
+  - tipo: 0
+    texto: con la
+    idCorrecto: 
+  - tipo: 1
+    texto: pala
+    idCorrecto: pala
+  tipoActivacion: 2
+  objetosRequeridos: []
+  misionRequeridaID: 08
+  bloqueada: 1
+  descifrada: 0
+  completada: 0
+  misionID: 11
+  idObjetoDestino: mano
+  idsObjetosCorrectos:
+  - pala
+  fragmentoAlDescifrar: {fileID: 0}
+  fragmentoAlCompletar: {fileID: 11400000, guid: 442a251a7a448a14393aa6d87df50254, type: 2}
+  reproducirFragmentoAutomaticamente: 1

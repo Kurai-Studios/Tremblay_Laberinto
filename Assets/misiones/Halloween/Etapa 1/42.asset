@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89fd470925eaa884386cbe8d241d6862, type: 3}
+  m_Name: 42
+  m_EditorClassIdentifier: 
+  descripcion: "Pon el farol junto a la reja y enci\xE9ndelo para ver el \xE1rbol.\r"
+  partes:
+  - tipo: 0
+    texto: Pon el
+    idCorrecto: 
+  - tipo: 1
+    texto: farol
+    idCorrecto: farol
+  - tipo: 0
+    texto: 'junto a la '
+    idCorrecto: 
+  - tipo: 1
+    texto: reja
+    idCorrecto: reja
+  - tipo: 0
+    texto: 'para ver el '
+    idCorrecto: 
+  - tipo: 1
+    texto: "\xE1rbol"
+    idCorrecto: arbol
+  tipoActivacion: 2
+  objetosRequeridos: []
+  misionRequeridaID: 41
+  bloqueada: 1
+  descifrada: 0
+  completada: 0
+  misionID: 42
+  idObjetoDestino: reja
+  idsObjetosCorrectos:
+  - farol
+  fragmentoAlDescifrar: {fileID: 11400000, guid: 5881b31429f464c4dba4908136048b48, type: 2}
+  fragmentoAlCompletar: {fileID: 0}
+  reproducirFragmentoAutomaticamente: 1

@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45b6d126be364064596a7235915301b7, type: 3}
+  m_Name: 01
+  m_EditorClassIdentifier: 
+  fragmentID: 01
+  nombreFragmento: 
+  audioNarracion: {fileID: 8300000, guid: 1bd620ebadbf76342879541be258762d, type: 3}
+  volumenAudio: 0.8
+  textoFragmento: "Child.\r\nI can\u2019t see anything... I need some light...\r\nThere\u2019s
+    a candle here... Come on, light already\u2026\r\nThat\u2019s it, now the lantern...\r\nGood...
+    at least I can see a little.\r\r"
+  duracionTotal: 0
+  tiempoFadeIn: 0.5
+  tiempoFadeOut: 0.5
+  avanceAutomatico: 1
+  colorFondo: {r: 0, g: 0, b: 0, a: 0.85}
+  colorTexto: {r: 1, g: 1, b: 1, a: 1}
+  "tama\xF1oFuente": 24
+  usarTypewriter: 1
+  velocidadTypewriter: 40
+  efectoVisualPrefab: {fileID: 0}
+  imagenFondo: {fileID: 21300000, guid: 04fa62e4c933243488967328618994be, type: 3}
+  "intensidadVi\xF1eta": 0
+  siguienteFragmento: {fileID: 0}
+  delayAntesSiguiente: 1
+  categoria: 0
+  prioridad: 5

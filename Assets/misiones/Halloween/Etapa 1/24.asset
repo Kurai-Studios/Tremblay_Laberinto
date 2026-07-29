@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89fd470925eaa884386cbe8d241d6862, type: 3}
+  m_Name: 24
+  m_EditorClassIdentifier: 
+  descripcion: "Lleva la calabaza, la vela y el farol al \xE1rbol.\r"
+  partes:
+  - tipo: 0
+    texto: Lleva la
+    idCorrecto: 
+  - tipo: 1
+    texto: calabaza
+    idCorrecto: calabaza
+  - tipo: 0
+    texto: la
+    idCorrecto: 
+  - tipo: 1
+    texto: vela
+    idCorrecto: vela
+  - tipo: 0
+    texto: y el
+    idCorrecto: 
+  - tipo: 1
+    texto: farol
+    idCorrecto: farol
+  - tipo: 0
+    texto: al
+    idCorrecto: 
+  - tipo: 1
+    texto: "\xE1rbol"
+    idCorrecto: arbol
+  tipoActivacion: 2
+  objetosRequeridos: []
+  misionRequeridaID: 22
+  bloqueada: 1
+  descifrada: 0
+  completada: 0
+  misionID: 24
+  idObjetoDestino: arbol
+  idsObjetosCorrectos:
+  - calabaza
+  - vela
+  - farol
+  fragmentoAlDescifrar: {fileID: 0}
+  fragmentoAlCompletar: {fileID: 11400000, guid: 3c49b108ed55a294cb7968f45da5d533, type: 2}
+  reproducirFragmentoAutomaticamente: 1

@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89fd470925eaa884386cbe8d241d6862, type: 3}
+  m_Name: 29
+  m_EditorClassIdentifier: 
+  descripcion: "Coloca la l\xE1mpara sobre la tumba y enci\xE9ndela con la vela.\r"
+  partes:
+  - tipo: 0
+    texto: Coloca la
+    idCorrecto: 
+  - tipo: 1
+    texto: "l\xE1mpara"
+    idCorrecto: lampara
+  - tipo: 0
+    texto: sobre la
+    idCorrecto: 
+  - tipo: 1
+    texto: tumba
+    idCorrecto: tumba
+  - tipo: 0
+    texto: "y enci\xE9ndela con la"
+    idCorrecto: 
+  - tipo: 1
+    texto: vela
+    idCorrecto: vela
+  tipoActivacion: 2
+  objetosRequeridos: []
+  misionRequeridaID: 25
+  bloqueada: 1
+  descifrada: 0
+  completada: 0
+  misionID: 29
+  idObjetoDestino: tumba
+  idsObjetosCorrectos:
+  - lampara
+  - vela
+  fragmentoAlDescifrar: {fileID: 0}
+  fragmentoAlCompletar: {fileID: 0}
+  reproducirFragmentoAutomaticamente: 1

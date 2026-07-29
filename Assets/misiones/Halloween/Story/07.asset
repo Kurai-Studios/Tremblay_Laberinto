@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45b6d126be364064596a7235915301b7, type: 3}
+  m_Name: 07
+  m_EditorClassIdentifier: 
+  fragmentID: 07
+  nombreFragmento: 
+  audioNarracion: {fileID: 8300000, guid: 53372280a265dd64c91c180c6c2b6b6c, type: 3}
+  volumenAudio: 0.8
+  textoFragmento: "Child.\r\n Wow... everything\u2019s covered in cobwebs.\r\n I
+    try to move forward, but they stick to my face...\r\n Okay... with this broom
+    I can push them away.\r\n There... step by step... I can finally see the inside
+    of the house."
+  duracionTotal: 0
+  tiempoFadeIn: 0.5
+  tiempoFadeOut: 0.5
+  avanceAutomatico: 1
+  colorFondo: {r: 0, g: 0, b: 0, a: 0.85}
+  colorTexto: {r: 1, g: 1, b: 1, a: 1}
+  "tama\xF1oFuente": 24
+  usarTypewriter: 1
+  velocidadTypewriter: 40
+  efectoVisualPrefab: {fileID: 0}
+  imagenFondo: {fileID: 21300000, guid: 45245e81dd2103941ab60139aed362b2, type: 3}
+  "intensidadVi\xF1eta": 0.3
+  siguienteFragmento: {fileID: 0}
+  delayAntesSiguiente: 1
+  categoria: 0
+  prioridad: 5

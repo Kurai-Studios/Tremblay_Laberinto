@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45b6d126be364064596a7235915301b7, type: 3}
+  m_Name: 03
+  m_EditorClassIdentifier: 
+  fragmentID: 03
+  nombreFragmento: 
+  audioNarracion: {fileID: 8300000, guid: 54bc5f091a63cf947af3fa67a1691354, type: 3}
+  volumenAudio: 0.8
+  textoFragmento: "[Child.]\r\nNo... no, the house isn\u2019t abandoned...{7}\r\nThe
+    stories are true... someone lives here...\r\nIt\u2019s... it\u2019s a witch\u2019s
+    house.\n<color=#BEFF7A>\r\n[Witch]\nMittens, I\u2019ll go down to the basement
+    for my broom and my hat.\r\nTonight, I must complete the ritual!</color>\r\n"
+  duracionTotal: 0
+  tiempoFadeIn: 0.5
+  tiempoFadeOut: 0.5
+  avanceAutomatico: 1
+  colorFondo: {r: 0, g: 0, b: 0, a: 0.85}
+  colorTexto: {r: 1, g: 1, b: 1, a: 1}
+  "tama\xF1oFuente": 24
+  usarTypewriter: 1
+  velocidadTypewriter: 11
+  efectoVisualPrefab: {fileID: 0}
+  imagenFondo: {fileID: 21300000, guid: e712766adca2b2843bc5627563e74602, type: 3}
+  "intensidadVi\xF1eta": 0.3
+  siguienteFragmento: {fileID: 0}
+  delayAntesSiguiente: 1
+  categoria: 0
+  prioridad: 5

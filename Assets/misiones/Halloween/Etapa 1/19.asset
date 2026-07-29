@@ -1,0 +1,48 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89fd470925eaa884386cbe8d241d6862, type: 3}
+  m_Name: 19
+  m_EditorClassIdentifier: 
+  descripcion: "Caza la ara\xF1a con la escoba y el gorro."
+  partes:
+  - tipo: 0
+    texto: Caza la
+    idCorrecto: 
+  - tipo: 1
+    texto: "ara\xF1a"
+    idCorrecto: arana
+  - tipo: 0
+    texto: con la
+    idCorrecto: 
+  - tipo: 1
+    texto: escoba
+    idCorrecto: escoba
+  - tipo: 0
+    texto: y el
+    idCorrecto: 
+  - tipo: 1
+    texto: gorro
+    idCorrecto: gorro
+  tipoActivacion: 2
+  objetosRequeridos: []
+  misionRequeridaID: 18
+  bloqueada: 1
+  descifrada: 0
+  completada: 0
+  misionID: 19
+  idObjetoDestino: arana
+  idsObjetosCorrectos:
+  - escoba
+  - gorro
+  fragmentoAlDescifrar: {fileID: 0}
+  fragmentoAlCompletar: {fileID: 11400000, guid: 89980acda2b10c94abd8c11a88dc7676, type: 2}
+  reproducirFragmentoAutomaticamente: 1

@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89fd470925eaa884386cbe8d241d6862, type: 3}
+  m_Name: 27
+  m_EditorClassIdentifier: 
+  descripcion: "Enciende una vela en la calabaza.\r"
+  partes:
+  - tipo: 0
+    texto: Enciende una
+    idCorrecto: 
+  - tipo: 1
+    texto: vela
+    idCorrecto: vela
+  - tipo: 0
+    texto: en la
+    idCorrecto: 
+  - tipo: 1
+    texto: calabaza
+    idCorrecto: calabaza
+  tipoActivacion: 2
+  objetosRequeridos: []
+  misionRequeridaID: 25
+  bloqueada: 1
+  descifrada: 0
+  completada: 0
+  misionID: 27
+  idObjetoDestino: calabaza
+  idsObjetosCorrectos:
+  - vela
+  fragmentoAlDescifrar: {fileID: 0}
+  fragmentoAlCompletar: {fileID: 0}
+  reproducirFragmentoAutomaticamente: 1

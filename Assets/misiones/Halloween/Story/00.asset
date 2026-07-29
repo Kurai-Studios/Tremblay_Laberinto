@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45b6d126be364064596a7235915301b7, type: 3}
+  m_Name: 00
+  m_EditorClassIdentifier: 
+  fragmentID: 00
+  nombreFragmento: 
+  audioNarracion: {fileID: 8300000, guid: 2542386048859e54bb5edd422f1cd05f, type: 3}
+  volumenAudio: 0.8
+  textoFragmento: "Ugh... where am I?\r\nI\u2019d better turn on the flashlight...\r\nOkay
+    okay... calm down...\r\nWhat are those portraits?... and those faces... they
+    look like they\u2019re staring at me...\r\nHmm... what a strange hat. A broom,
+    candles, lanterns...\r\nThis place is creepy.\r\nI\u2019ll call the guys... \r\nNo...
+    no way... my phone\u2019s out of battery."
+  duracionTotal: 0
+  tiempoFadeIn: 0.5
+  tiempoFadeOut: 0.5
+  avanceAutomatico: 1
+  colorFondo: {r: 0, g: 0, b: 0, a: 0.85}
+  colorTexto: {r: 1, g: 1, b: 1, a: 1}
+  "tama\xF1oFuente": 24
+  usarTypewriter: 1
+  velocidadTypewriter: 10
+  efectoVisualPrefab: {fileID: 0}
+  imagenFondo: {fileID: 21300000, guid: 9605a70f44977934c936a75d5d503ac7, type: 3}
+  "intensidadVi\xF1eta": 0.3
+  siguienteFragmento: {fileID: 0}
+  delayAntesSiguiente: 1
+  categoria: 0
+  prioridad: 5

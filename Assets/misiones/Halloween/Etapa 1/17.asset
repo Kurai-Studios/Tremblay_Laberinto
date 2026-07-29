@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89fd470925eaa884386cbe8d241d6862, type: 3}
+  m_Name: 17
+  m_EditorClassIdentifier: 
+  descripcion: "Abre el ata\xFAd con la pala.\r"
+  partes:
+  - tipo: 0
+    texto: Abre el
+    idCorrecto: 
+  - tipo: 1
+    texto: "ata\xFAd"
+    idCorrecto: ataud
+  - tipo: 0
+    texto: con la
+    idCorrecto: 
+  - tipo: 1
+    texto: pala
+    idCorrecto: pala
+  tipoActivacion: 2
+  objetosRequeridos: []
+  misionRequeridaID: 16
+  bloqueada: 1
+  descifrada: 0
+  completada: 0
+  misionID: 17
+  idObjetoDestino: ataud
+  idsObjetosCorrectos:
+  - pala
+  fragmentoAlDescifrar: {fileID: 0}
+  fragmentoAlCompletar: {fileID: 11400000, guid: 6d77b885aacc56c47abf79224e583fbb, type: 2}
+  reproducirFragmentoAutomaticamente: 1

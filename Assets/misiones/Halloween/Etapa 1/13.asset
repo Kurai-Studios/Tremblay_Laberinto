@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89fd470925eaa884386cbe8d241d6862, type: 3}
+  m_Name: 13
+  m_EditorClassIdentifier: 
+  descripcion: "Alumbrar el libro con el farol.\r"
+  partes:
+  - tipo: 0
+    texto: Alumbrar el
+    idCorrecto: 
+  - tipo: 1
+    texto: libro
+    idCorrecto: libro
+  - tipo: 0
+    texto: con el
+    idCorrecto: 
+  - tipo: 1
+    texto: farol
+    idCorrecto: farol
+  tipoActivacion: 2
+  objetosRequeridos: []
+  misionRequeridaID: 10
+  bloqueada: 1
+  descifrada: 0
+  completada: 0
+  misionID: 13
+  idObjetoDestino: libro
+  idsObjetosCorrectos:
+  - farol
+  fragmentoAlDescifrar: {fileID: 11400000, guid: 3aac3ef12c06a104f8ff86538dc12a1b, type: 2}
+  fragmentoAlCompletar: {fileID: 0}
+  reproducirFragmentoAutomaticamente: 1

@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45b6d126be364064596a7235915301b7, type: 3}
+  m_Name: 29
+  m_EditorClassIdentifier: 
+  fragmentID: 29
+  nombreFragmento: 
+  audioNarracion: {fileID: 8300000, guid: 56d2b891083a44e45ad17ba3c167bdea, type: 3}
+  volumenAudio: 0.8
+  textoFragmento: "Child.\r\nMittens?\u2026\r\nSo you\u2019re still around, huh?\r\nDon\u2019t
+    think I\u2019ve forgotten all the scares you gave me, little furball\u2026 I
+    almost gave a heart attack.\r\nAlright, alright\u2026 peace between us.\r\nI\u2019ll
+    bring you some food every day, deal?\r\nBut promise me you won\u2019t give me
+    away next time there\u2019s a witch around.\r\nDeal, Mittens.\r"
+  duracionTotal: 0
+  tiempoFadeIn: 0.5
+  tiempoFadeOut: 0.5
+  avanceAutomatico: 0
+  colorFondo: {r: 0, g: 0, b: 0, a: 0.85}
+  colorTexto: {r: 1, g: 1, b: 1, a: 1}
+  "tama\xF1oFuente": 24
+  usarTypewriter: 1
+  velocidadTypewriter: 40
+  efectoVisualPrefab: {fileID: 0}
+  imagenFondo: {fileID: 21300000, guid: c9be6373d02ac6d4eab21f7bcd9202d9, type: 3}
+  "intensidadVi\xF1eta": 0.3
+  siguienteFragmento: {fileID: 0}
+  delayAntesSiguiente: 1
+  categoria: 0
+  prioridad: 5
