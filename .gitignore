@@ -73,3 +73,7 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
+Assets/Plugins/NuGet/.nuget-installed.json
+Assets/Plugins/NuGet/McpPlugin.Common.dll
+Assets/Plugins/NuGet/McpPlugin.dll
+Assets/Plugins/NuGet/ReflectorNet.dll
