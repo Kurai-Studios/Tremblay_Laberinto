@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.ProBuilder.MeshOperations;
 
+/* ===== SISTEMA DE REGLAS - Comentado por ahora, retomar mas adelante =====
 [System.Serializable]
 public class PlatformRule
 {
@@ -29,24 +30,27 @@ public class PlatformRule
     [HideInInspector] public int currentLevelCount = 0;
     [HideInInspector] public bool isSaturated = false;
 }
+*/
 
 public class CylinderRender : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] CylinderPlatformGen platformGen;
-    [SerializeField] RuleManager ruleManager;
-
-    [Header("Platform Rules")]
-    public PlatformRule[] platformRules;
+    // [SerializeField] RuleManager ruleManager; // Sistema de reglas desactivado por ahora
 
     [Header("Platform Settings")]
+    public GameObject[] platformPrefabs; // Reemplaza temporalmente a platformRules mientras el sistema de reglas esta desactivado
     public float platformScale = 1f;
-    public float heightOffset = 0f;  // Desplazamiento vertical desde la base del cilindro
+
+    [Header("Cylinder Settings")]
+    public bool overrideCylinderDimensions = false;
+    public float cylinderRadius = 5f;
+    public float cylinderHeight = 10f;
 
     /*[Header("Debug")]
     public bool showGizmos = false;*/
 
-    private List<PlatformRule> availableRules = new List<PlatformRule>();
+    /* private List<PlatformRule> availableRules = new List<PlatformRule>(); */
 
     private void Start()
     {
@@ -63,35 +67,45 @@ public class CylinderRender : MonoBehaviour
             return;
         }
 
-        if (platformRules == null || platformRules.Length == 0)
+        if (platformPrefabs == null || platformPrefabs.Length == 0)
         {
-            //Debug.LogError("PlatformPrefab no asignado en PlatformRenderer");
+            //Debug.LogError("No hay platformPrefabs asignados en PlatformRenderer");
             return;
         }
 
-        ResetCounters();
+        /* ResetCounters(); */
 
-        if (ruleManager != null)
+        /* if (ruleManager != null)
         {
             ruleManager.ResetRules();
 
             float radius = platformGen.GetCylinderRadius();
             float height = platformGen.GetCylinderHeight();
             ruleManager.UpdateCylinderConfig(radius, height);
+        } */
+
+        // Aplicar (o limpiar) el override de dimensiones del cilindro antes de generar
+        if (overrideCylinderDimensions)
+        {
+            platformGen.SetCylinderOverride(cylinderRadius, cylinderHeight);
+        }
+        else
+        {
+            platformGen.ClearCylinderOverride();
         }
 
         // Obtener los datos de las plataformas
         TowerPlatform[,] platforms = platformGen.GetPlatforms();
 
         // Obtener dimensiones del cilindro
-        float cylinderRadius = platformGen.GetCylinderRadius();
-        float cylinderHeight = platformGen.GetCylinderHeight();
+        float cylinderRadiusValue = platformGen.GetCylinderRadius();
+        float cylinderHeightValue = platformGen.GetCylinderHeight();
         int totalLevels = platformGen.GetTotalLevels();
 
         Vector3 basePosition = platformGen.GetPlatformBasePosition();
 
         //Debug.Log($"Renderizando plataformas desde: {basePosition}");
-        //Debug.Log($"Radio del cilindro: {cylinderRadius}");
+        //Debug.Log($"Radio del cilindro: {cylinderRadiusValue}");
         //Debug.Log($"Total de niveles: {platforms.GetLength(0)}");
 
         // Validar que hay datos
@@ -107,24 +121,21 @@ public class CylinderRender : MonoBehaviour
         {
             GameObject cylinderInstance = Instantiate(cylinder, Vector3.zero, Quaternion.identity, transform);
             // El cilindro se instancia en el centro (0,0,0)
-        }
 
-        int totalPlatforms = CountTotalPlatforms(platforms);
-        int totalAssigned = 0;
+            // Si hay override activo, escalar el cilindro instanciado para que coincida visualmente
+            if (overrideCylinderDimensions)
+            {
+                CylinderData baseData = cylinder.GetComponent<CylinderData>();
+                if (baseData == null)
+                    baseData = cylinder.GetComponentInChildren<CylinderData>();
 
-        foreach (var rule in platformRules)
-        {
-            totalAssigned += rule.exactCount;
-        }
-
-        // Verificar que el total de plataformas asignadas no exceda el total disponible
-        if (totalAssigned > totalPlatforms)
-        {
-            //Debug.LogWarning($"¡Cuidado! Has asignado {totalAssigned} plataformas pero solo hay {totalPlatforms} espacios. Algunas no se podrán generar.");
-        }
-        else if (totalAssigned < totalPlatforms)
-        {
-            //Debug.Log($"Has asignado {totalAssigned} plataformas de {totalPlatforms} totales. El resto serán plataformas por defecto.");
+                if (baseData != null && baseData.radio > 0f && baseData.altura > 0f)
+                {
+                    float radiusScale = cylinderRadius / baseData.radio;
+                    float heightScale = cylinderHeight / baseData.altura;
+                    cylinderInstance.transform.localScale = new Vector3(radiusScale, heightScale, radiusScale);
+                }
+            }
         }
 
         // Loop a traves de todos los niveles y plataformas
@@ -133,22 +144,13 @@ public class CylinderRender : MonoBehaviour
 
         for (int level = 0; level < levelCount; level++)
         {
-
-            ResetLevelCounters();
-
             for (int i = 0; i < maxPlatformsPerLevel; i++)
             {
                 TowerPlatform platformData = platforms[level, i];
                 if (platformData == null) continue;
 
-                GameObject selectedPrefab = SelectPrefabWithRules(level, i, platforms);
-
-                if (selectedPrefab == null)
-                {
-                    // Si no hay prefab seleccionado, usar el primero de la lista
-                    selectedPrefab = platformRules[0].prefab;
-                    //Debug.Log($"Usando prefab por defecto: {platformRules[0].platformName}");
-                }
+                // Seleccion simple al azar mientras el sistema de reglas esta desactivado
+                GameObject selectedPrefab = platformPrefabs[Random.Range(0, platformPrefabs.Length)];
 
                 GameObject newPlatform = Instantiate(selectedPrefab, transform);
                 newPlatform.transform.localScale = Vector3.one * platformScale;
@@ -160,11 +162,11 @@ public class CylinderRender : MonoBehaviour
                     continue;
                 }
 
-                
-                platformCell.Init(platformData, cylinderRadius, heightOffset,
+
+                platformCell.Init(platformData, cylinderRadiusValue,
                                  platformGen.levelHeight, basePosition);
 
-                if (ruleManager != null)
+                /* if (ruleManager != null)
                 {
                     ruleManager.RegisterPlacedPlatform(
                         selectedPrefab,
@@ -173,26 +175,14 @@ public class CylinderRender : MonoBehaviour
                         platformData.angle,
                         newPlatform.transform.position
                     );
-                }
-
-                UpdateCounters(selectedPrefab);
+                } */
             }
-        }
-
-        Debug.Log($"=== ESTADÍSTICAS DE GENERACIÓN ===");
-        foreach (var rule in platformRules)
-        {
-            Debug.Log($"{rule.platformName}: {rule.currentCount} / {rule.exactCount} plataformas generadas");
-        }
-
-        if (ruleManager != null)
-        {
-            Debug.Log(ruleManager.GetRuleStatistics());
         }
 
         //Debug.Log($"Torre generada: {levelCount} niveles, {CountTotalPlatforms(platforms)} plataformas totales");
     }
 
+    /* ===== SELECCION POR REGLAS - Comentado por ahora, retomar mas adelante =====
     GameObject SelectPrefabWithRules(int level, int index, TowerPlatform[,] allPlatforms)
     {
         List<GameObject> availablePrefabs = new List<GameObject>();
@@ -235,10 +225,10 @@ public class CylinderRender : MonoBehaviour
 
             if (ruleManager == null || ruleManager.CanPlacePlatform(candidate, level, index, allPlatforms))
             {
-                
+
                 Debug.Log($"Prefab '{candidate.name}' seleccionado para nivel {level}, " +
                              $"índice {index} (intento {attempts})");
-                
+
                 return candidate;
             }
             else
@@ -251,7 +241,7 @@ public class CylinderRender : MonoBehaviour
         }
 
         Debug.LogWarning($"No se encontró prefab que cumpla reglas en nivel {level}, índice {index}");
-        
+
         return null;
     }
 
@@ -307,6 +297,7 @@ public class CylinderRender : MonoBehaviour
         }
         return count;
     }
+    */
 
     // Limpia todas las plataformas generadas (para regenerar)
     public void ClearTower()
@@ -317,10 +308,10 @@ public class CylinderRender : MonoBehaviour
             DestroyImmediate(transform.GetChild(i).gameObject);
         }
 
-        ResetCounters();
+        /* ResetCounters();
 
         if (ruleManager != null)
-            ruleManager.ResetRules();
+            ruleManager.ResetRules(); */
     }
 
     // Regenera la torre

@@ -13,7 +13,7 @@ public class CylinderPlatformObj : MonoBehaviour
     private float levelHeight;
 
     // Inicializa la plataforma con los datos generados
-    public void Init(TowerPlatform data, float cylinderRadius, float heightOffset, float levelHeight, Vector3 basePosition)
+    public void Init(TowerPlatform data, float cylinderRadius, float levelHeight, Vector3 basePosition)
     {
         // Guardar referencia a los datos
         platformData = data;

@@ -40,6 +40,25 @@ public class CylinderPlatformGen : MonoBehaviour
     private float cylinderRadius;
     private int totalLevels;
 
+    // Override de dimensiones del cilindro (asignado por CylinderRender)
+    private bool useCylinderOverride = false;
+    private float overrideCylinderRadius = 5f;
+    private float overrideCylinderHeight = 10f;
+
+    // Activa el override y fija radio/altura a usar en la generacion
+    public void SetCylinderOverride(float radius, float height)
+    {
+        useCylinderOverride = true;
+        overrideCylinderRadius = radius;
+        overrideCylinderHeight = height;
+    }
+
+    // Desactiva el override, volviendo a usar los valores del prefab seleccionado
+    public void ClearCylinderOverride()
+    {
+        useCylinderOverride = false;
+    }
+
     // Lista de direcciones para randomizacion
     List<float> angleDirections = new List<float>();
 
@@ -134,6 +153,11 @@ public class CylinderPlatformGen : MonoBehaviour
     // Obtiene la altura del cilindro usando Mesh.bounds
     float GetCylinderHeight(GameObject cylinder)
     {
+        if (useCylinderOverride)
+        {
+            return overrideCylinderHeight;
+        }
+
         if (cylinder == null)
         {
             //Debug.LogError("Cylinder es null");
@@ -206,6 +230,11 @@ public class CylinderPlatformGen : MonoBehaviour
     // Obtiene el radio del cilindro usando Mesh.bounds
     float GetCylinderRadius(GameObject cylinder)
     {
+        if (useCylinderOverride)
+        {
+            return overrideCylinderRadius;
+        }
+
         if (cylinder == null)
         {
             //Debug.LogError("Cylinder es null");
