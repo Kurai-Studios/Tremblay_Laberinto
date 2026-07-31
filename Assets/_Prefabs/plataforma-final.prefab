@@ -367,7 +367,7 @@ GameObject:
   - component: {fileID: 8557721576242731706}
   - component: {fileID: 8559225880211341070}
   m_Layer: 0
-  m_Name: plataforma-test 3
+  m_Name: plataforma-final
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -401,5 +401,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26855e99fe3db2d43853f37cebc38595, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CylinderPlatformObj
+  tags:
+  - Final
   platformMesh: {fileID: 4919983196619078132}
   platformCollider: {fileID: 4919983196619078132}

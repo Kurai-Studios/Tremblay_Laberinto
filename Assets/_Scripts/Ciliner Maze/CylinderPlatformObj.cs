@@ -2,6 +2,10 @@ using UnityEngine;
 
 public class CylinderPlatformObj : MonoBehaviour
 {
+    [Header("Platform Tags")]
+    [Tooltip("Tags usados por el sistema de reglas para identificar el tipo/categoria de esta plataforma")]
+    [SerializeField] private string[] tags;
+
     [Header("Platform Visuals")]
     [SerializeField] GameObject platformMesh;      // El mesh principal de la plataforma
     [SerializeField] GameObject platformCollider;  // El collider de la plataforma
@@ -101,6 +105,26 @@ public class CylinderPlatformObj : MonoBehaviour
     public TowerPlatform GetPlatformData()
     {
         return platformData;
+    }
+
+    // Verifica si la plataforma tiene un tag especifico (usado por el sistema de reglas)
+    public bool HasTag(string tag)
+    {
+        if (tags == null || string.IsNullOrEmpty(tag)) return false;
+
+        foreach (string t in tags)
+        {
+            if (string.Equals(t, tag, System.StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+
+        return false;
+    }
+
+    // Obtiene todos los tags de la plataforma
+    public string[] GetTags()
+    {
+        return tags;
     }
 
     /*void OnDrawGizmosSelected()

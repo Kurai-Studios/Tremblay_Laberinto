@@ -35,8 +35,8 @@ public class PlatformRule
 public class CylinderRender : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] CylinderPlatformGen platformGen;
-    // [SerializeField] RuleManager ruleManager; // Sistema de reglas desactivado por ahora
+    [SerializeField] CylinderGeneration platformGen;
+    [SerializeField] RuleManager ruleManager;
 
     [Header("Platform Settings")]
     public GameObject[] platformPrefabs; // Reemplaza temporalmente a platformRules mientras el sistema de reglas esta desactivado
@@ -138,48 +138,55 @@ public class CylinderRender : MonoBehaviour
             }
         }
 
-        // Loop a traves de todos los niveles y plataformas
-        int levelCount = platforms.GetLength(0);
-        int maxPlatformsPerLevel = platforms.GetLength(1);
-
-        for (int level = 0; level < levelCount; level++)
+        // Por ahora solo generamos el camino (path) definido por el RuleManager,
+        // sin ninguna otra regla ni relleno aleatorio de plataformas.
+        if (ruleManager == null)
         {
-            for (int i = 0; i < maxPlatformsPerLevel; i++)
-            {
-                TowerPlatform platformData = platforms[level, i];
-                if (platformData == null) continue;
-
-                // Seleccion simple al azar mientras el sistema de reglas esta desactivado
-                GameObject selectedPrefab = platformPrefabs[Random.Range(0, platformPrefabs.Length)];
-
-                GameObject newPlatform = Instantiate(selectedPrefab, transform);
-                newPlatform.transform.localScale = Vector3.one * platformScale;
-
-                CylinderPlatformObj platformCell = newPlatform.GetComponent<CylinderPlatformObj>();
-                if (platformCell == null)
-                {
-                    //Debug.LogError($"PlatformPrefab no tiene componente PlatformCellObj");
-                    continue;
-                }
-
-
-                platformCell.Init(platformData, cylinderRadiusValue,
-                                 platformGen.levelHeight, basePosition);
-
-                /* if (ruleManager != null)
-                {
-                    ruleManager.RegisterPlacedPlatform(
-                        selectedPrefab,
-                        level,
-                        i,
-                        platformData.angle,
-                        newPlatform.transform.position
-                    );
-                } */
-            }
+            //Debug.LogError("RuleManager no asignado en CylinderRender");
+            return;
         }
 
-        //Debug.Log($"Torre generada: {levelCount} niveles, {CountTotalPlatforms(platforms)} plataformas totales");
+        List<PathPlatform> path = ruleManager.GeneratePath(totalLevels);
+
+        foreach (PathPlatform pathPlatform in path)
+        {
+            GameObject selectedPrefab = GetPrefabByTag(pathPlatform.tag);
+            if (selectedPrefab == null)
+            {
+                //Debug.LogWarning($"No hay ningun platformPrefab con el tag '{pathPlatform.tag}'");
+                continue;
+            }
+
+            GameObject newPlatform = Instantiate(selectedPrefab, transform);
+            newPlatform.transform.localScale = Vector3.one * platformScale;
+
+            CylinderPlatformObj platformCell = newPlatform.GetComponent<CylinderPlatformObj>();
+            if (platformCell == null)
+            {
+                //Debug.LogError($"PlatformPrefab no tiene componente PlatformCellObj");
+                continue;
+            }
+
+            TowerPlatform platformData = new TowerPlatform(pathPlatform.level, pathPlatform.angle);
+
+            platformCell.Init(platformData, cylinderRadiusValue,
+                             platformGen.levelHeight, basePosition);
+        }
+
+        //Debug.Log($"Camino generado: {path.Count} plataformas en {totalLevels} niveles");
+    }
+
+    // Busca en platformPrefabs el primer prefab cuyo CylinderPlatformObj tenga el tag indicado
+    GameObject GetPrefabByTag(string tag)
+    {
+        foreach (GameObject prefab in platformPrefabs)
+        {
+            CylinderPlatformObj platformObj = prefab.GetComponent<CylinderPlatformObj>();
+            if (platformObj != null && platformObj.HasTag(tag))
+                return prefab;
+        }
+
+        return null;
     }
 
     /* ===== SELECCION POR REGLAS - Comentado por ahora, retomar mas adelante =====

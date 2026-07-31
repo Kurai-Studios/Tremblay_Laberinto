@@ -18,11 +18,11 @@ public class TowerPlatform
     }
 }
 
-public class CylinderPlatformGen : MonoBehaviour
+public class CylinderGeneration : MonoBehaviour
 {
     [Header("Platform Settings")]
-    [Range(2, 50)] public int minPlatformsPerLevel = 2;
-    [Range(2, 50)] public int maxPlatformsPerLevel = 5;
+    public int minPlatformsPerLevel = 2;
+    public int maxPlatformsPerLevel = 5;
     public float levelHeight = 1.5f;
     public float minAngleSeparation = 30f;  // Grados minimos entre plataformas
 

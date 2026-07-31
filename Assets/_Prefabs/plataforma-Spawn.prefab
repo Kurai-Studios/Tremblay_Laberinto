@@ -401,5 +401,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 26855e99fe3db2d43853f37cebc38595, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CylinderPlatformObj
+  tags:
+  - Spawn
   platformMesh: {fileID: 4919983196619078132}
   platformCollider: {fileID: 4919983196619078132}
