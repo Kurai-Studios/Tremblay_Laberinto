@@ -5636,8 +5636,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: db832cf306fd4a44d94dda6104f8ccc3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CylinderData
-  altura: 40
-  radio: 10
+  altura: 10
+  radio: 2.5
   platformStartPoint: {fileID: 2449711291666666191}
   nombreCilindro: Cilindro Base
   colorIdentificador: {r: 1, g: 1, b: 1, a: 1}

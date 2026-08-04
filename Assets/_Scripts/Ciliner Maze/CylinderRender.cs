@@ -47,6 +47,10 @@ public class CylinderRender : MonoBehaviour
     public float cylinderRadius = 5f;
     public float cylinderHeight = 10f;
 
+    [Header("Cylinder Materials")]
+    [Tooltip("Se elige un material al azar de esta lista y se aplica al cilindro instanciado en cada partida")]
+    public Material[] cylinderMaterials;
+
     /*[Header("Debug")]
     public bool showGizmos = false;*/
 
@@ -136,6 +140,13 @@ public class CylinderRender : MonoBehaviour
                     cylinderInstance.transform.localScale = new Vector3(radiusScale, heightScale, radiusScale);
                 }
             }
+
+            // Aplicar un material aleatorio de la lista, si hay alguno asignado
+            if (cylinderMaterials != null && cylinderMaterials.Length > 0)
+            {
+                Material randomMaterial = cylinderMaterials[Random.Range(0, cylinderMaterials.Length)];
+                ApplyMaterial(cylinderInstance, randomMaterial);
+            }
         }
 
         // Por ahora solo generamos el camino (path) definido por el RuleManager,
@@ -174,6 +185,18 @@ public class CylinderRender : MonoBehaviour
         }
 
         //Debug.Log($"Camino generado: {path.Count} plataformas en {totalLevels} niveles");
+    }
+
+    // Aplica un material a todos los renderers del cilindro instanciado (el propio objeto y sus hijos)
+    void ApplyMaterial(GameObject target, Material material)
+    {
+        if (material == null) return;
+
+        Renderer[] renderers = target.GetComponentsInChildren<Renderer>();
+        foreach (Renderer renderer in renderers)
+        {
+            renderer.material = material;
+        }
     }
 
     // Busca en platformPrefabs el primer prefab cuyo CylinderPlatformObj tenga el tag indicado

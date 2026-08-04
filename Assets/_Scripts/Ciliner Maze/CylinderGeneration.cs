@@ -29,8 +29,8 @@ public class CylinderGeneration : MonoBehaviour
     [Header("Randomization")]
     //public int seed = -1;
 
-    [Header("Cylinder Prefabs")]
-    public GameObject[] cylinderPrefabs;  // Al menos 4 prefabs diferentes
+    [Header("Cylinder Prefab")]
+    public GameObject cylinderPrefab;
 
     // Variables internas
     private TowerPlatform[,] platforms;
@@ -79,8 +79,8 @@ public class CylinderGeneration : MonoBehaviour
             Debug.Log($"Usando semilla aleatoria: {randomSeed}");
         }*/
 
-        // Seleccionar cilindro aleatorio
-        selectedCylinder = SelectRandomCylinder();
+        // Usar el unico cilindro asignado
+        selectedCylinder = cylinderPrefab;
 
         // Obtener altura y radio del cilindro
         cylinderHeight = GetCylinderHeight(selectedCylinder);
@@ -135,19 +135,6 @@ public class CylinderGeneration : MonoBehaviour
         platforms = ConvertTo2DArray(platformList);
 
         return platforms;
-    }
-
-    // Selecciona un cilindro aleatorio del array
-    GameObject SelectRandomCylinder()
-    {
-        if (cylinderPrefabs == null || cylinderPrefabs.Length < 4)
-        {
-           // Debug.LogError("Se necesitan al menos 4 prefabs de cilindro en cylinderPrefabs");
-            return null;
-        }
-
-        int randomIndex = Random.Range(0, cylinderPrefabs.Length);
-        return cylinderPrefabs[randomIndex];
     }
 
     // Obtiene la altura del cilindro usando Mesh.bounds

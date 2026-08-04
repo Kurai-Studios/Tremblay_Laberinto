@@ -2204,7 +2204,7 @@ GameObject:
   - component: {fileID: 607208736}
   - component: {fileID: 607208737}
   m_Layer: 0
-  m_Name: CylinderPlatTester
+  m_Name: CylinderMazeManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2226,11 +2226,7 @@ MonoBehaviour:
   maxPlatformsPerLevel: 5
   levelHeight: 4
   minAngleSeparation: 30
-  cylinderPrefabs:
-  - {fileID: 2855397460134390941, guid: ad82f64fb30e68a41b89ec47e2d3326e, type: 3}
-  - {fileID: 2855397460134390941, guid: 8b7f85b84b97dd047a3ec4d70d5ea3da, type: 3}
-  - {fileID: 2855397460134390941, guid: ab2c41c53f34c1148a452895c8db2e30, type: 3}
-  - {fileID: 2855397460134390941, guid: 3c265beedc0789947b668011adff1148, type: 3}
+  cylinderPrefab: {fileID: 2855397460134390941, guid: ad82f64fb30e68a41b89ec47e2d3326e, type: 3}
 --- !u!4 &607208735
 Transform:
   m_ObjectHideFlags: 0
@@ -2269,6 +2265,11 @@ MonoBehaviour:
   overrideCylinderDimensions: 1
   cylinderRadius: 6
   cylinderHeight: 40
+  cylinderMaterials:
+  - {fileID: -6478536213147159724, guid: 1011a23eaf5d70447a39ff4f1e08397c, type: 3}
+  - {fileID: -3846018093981099296, guid: 1011a23eaf5d70447a39ff4f1e08397c, type: 3}
+  - {fileID: 4874126678125670354, guid: 1011a23eaf5d70447a39ff4f1e08397c, type: 3}
+  - {fileID: -6922793697723135513, guid: 1011a23eaf5d70447a39ff4f1e08397c, type: 3}
 --- !u!114 &607208737
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2281,9 +2282,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d3d51d2ac8c9cde4999a3f15d37e1b8a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RuleManager
-  minSpiralTurns: 1
-  maxSpiralTurns: 2
-  angleJitter: 15
+  minStepAngle: 20
+  maxStepAngle: 100
+  directionChangeChance: 0.5
   minExtraPlatformsPerLevel: 1
   maxExtraPlatformsPerLevel: 3
   extraPlatformSpacing: 25

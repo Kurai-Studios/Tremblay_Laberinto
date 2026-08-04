@@ -19,13 +19,14 @@ public struct PathPlatform
 
 public class RuleManager : MonoBehaviour
 {
-    [Header("Path - Espiral")]
-    [Tooltip("Minimo de vueltas completas (360°) que da el camino a lo largo de toda la torre")]
-    public float minSpiralTurns = 1f;
-    [Tooltip("Maximo de vueltas completas (360°) que da el camino a lo largo de toda la torre")]
-    public float maxSpiralTurns = 2f;
-    [Tooltip("Variacion aleatoria maxima (en grados) aplicada al angulo de cada nivel")]
-    public float angleJitter = 15f;
+    [Header("Path - Random Walk")]
+    [Tooltip("Angulo minimo (en grados) que avanza el camino entre un nivel y el siguiente")]
+    public float minStepAngle = 20f;
+    [Tooltip("Angulo maximo (en grados) que avanza el camino entre un nivel y el siguiente")]
+    public float maxStepAngle = 100f;
+    [Range(0f, 1f)]
+    [Tooltip("Probabilidad de cambiar de direccion (horario/antihorario) en cada nivel")]
+    public float directionChangeChance = 0.3f;
 
     [Header("Path - Plataformas Extra")]
     [Tooltip("Cantidad minima de plataformas extra (ademas de la principal) en cada nivel intermedio del camino")]
@@ -35,8 +36,11 @@ public class RuleManager : MonoBehaviour
     [Tooltip("Separacion angular entre cada plataforma extra consecutiva del mismo nivel (se encadenan en una sola direccion para simular una plataforma larga)")]
     public float extraPlatformSpacing = 25f;
 
-    // Genera un camino continuo desde el nivel base hasta el nivel mas alto,
-    // envolviendo el cilindro (espiral) en vez de subir en linea recta.
+    // Genera un camino continuo desde el nivel base hasta el nivel mas alto mediante un
+    // random walk: en cada nivel el angulo avanza un paso aleatorio (con direccion que
+    // puede cambiar de forma aleatoria), en vez de seguir una espiral uniforme fija.
+    // Esto hace que el camino resultante sea distinto en cada partida y no siempre
+    // tenga forma de espiral perfecta.
     // Solo usa los tags Spawn (nivel base), Normal (niveles intermedios) y Final (nivel mas alto).
     public List<PathPlatform> GeneratePath(int totalLevels)
     {
@@ -44,22 +48,14 @@ public class RuleManager : MonoBehaviour
 
         if (totalLevels <= 0) return path;
 
-        float totalTurns = Random.Range(minSpiralTurns, maxSpiralTurns);
+        float currentAngle = Random.Range(0f, 360f);
         float direction = Random.value < 0.5f ? 1f : -1f;
-        float totalSweep = totalTurns * 360f * direction;
-
-        float startAngle = Random.Range(0f, 360f);
 
         for (int level = 0; level < totalLevels; level++)
         {
-            float t = totalLevels > 1 ? (float)level / (totalLevels - 1) : 0f;
-            float baseAngle = startAngle + totalSweep * t;
-            float jitter = Random.Range(-angleJitter, angleJitter);
-            float angle = NormalizeAngle(baseAngle + jitter);
-
             string tag = GetTagForLevel(level, totalLevels);
 
-            path.Add(new PathPlatform(level, angle, tag));
+            path.Add(new PathPlatform(level, currentAngle, tag));
 
             // Plataformas extra en niveles intermedios (siempre Normal), encadenadas en
             // una sola direccion para que se sientan como una plataforma larga
@@ -71,9 +67,20 @@ public class RuleManager : MonoBehaviour
 
                 for (int e = 1; e <= extraCount; e++)
                 {
-                    float extraAngle = NormalizeAngle(angle + extraPlatformSpacing * e * offsetSign);
+                    float extraAngle = NormalizeAngle(currentAngle + extraPlatformSpacing * e * offsetSign);
                     path.Add(new PathPlatform(level, extraAngle, "Normal"));
                 }
+            }
+
+            // Avanzar al siguiente nivel con un paso aleatorio, cambiando de direccion
+            // ocasionalmente para que el camino no sea una espiral perfectamente uniforme
+            if (level < totalLevels - 1)
+            {
+                if (Random.value < directionChangeChance)
+                    direction *= -1f;
+
+                float step = Random.Range(minStepAngle, maxStepAngle) * direction;
+                currentAngle = NormalizeAngle(currentAngle + step);
             }
         }
 
