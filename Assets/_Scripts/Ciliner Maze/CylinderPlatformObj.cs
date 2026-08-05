@@ -10,6 +10,11 @@ public class CylinderPlatformObj : MonoBehaviour
     [SerializeField] GameObject platformMesh;      // El mesh principal de la plataforma
     [SerializeField] GameObject platformCollider;  // El collider de la plataforma
 
+    [Header("Ladder Connection")]
+    [Tooltip("Puntos de anclaje L/R donde puede conectar una escalera hacia/desde esta plataforma. El LadderPlacer elige el mas cercano a la otra plataforma a conectar.")]
+    [SerializeField] Transform anchorL;
+    [SerializeField] Transform anchorR;
+
     private TowerPlatform platformData;
     private Vector3 worldPosition;
     private Vector3 basePosition;
@@ -125,6 +130,17 @@ public class CylinderPlatformObj : MonoBehaviour
     public string[] GetTags()
     {
         return tags;
+    }
+
+    // Anchors L/R usados por LadderPlacer para conectar escaleras
+    public Transform GetAnchorL()
+    {
+        return anchorL;
+    }
+
+    public Transform GetAnchorR()
+    {
+        return anchorR;
     }
 
     /*void OnDrawGizmosSelected()

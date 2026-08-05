@@ -37,6 +37,7 @@ public class CylinderRender : MonoBehaviour
     [Header("References")]
     [SerializeField] CylinderGeneration platformGen;
     [SerializeField] RuleManager ruleManager;
+    [SerializeField] LadderPlacer ladderPlacer;
 
     [Header("Platform Settings")]
     public GameObject[] platformPrefabs; // Reemplaza temporalmente a platformRules mientras el sistema de reglas esta desactivado
@@ -55,6 +56,10 @@ public class CylinderRender : MonoBehaviour
     public bool showGizmos = false;*/
 
     /* private List<PlatformRule> availableRules = new List<PlatformRule>(); */
+
+    // Plataforma principal del camino por nivel (la primera generada en ese nivel; las
+    // extras del mismo nivel no cuentan). LadderPlacer la usa para conectar niveles consecutivos.
+    private Dictionary<int, CylinderPlatformObj> mainPathPlatforms = new Dictionary<int, CylinderPlatformObj>();
 
     private void Start()
     {
@@ -159,6 +164,8 @@ public class CylinderRender : MonoBehaviour
 
         List<PathPlatform> path = ruleManager.GeneratePath(totalLevels);
 
+        mainPathPlatforms.Clear();
+
         foreach (PathPlatform pathPlatform in path)
         {
             GameObject selectedPrefab = GetPrefabByTag(pathPlatform.tag);
@@ -182,9 +189,23 @@ public class CylinderRender : MonoBehaviour
 
             platformCell.Init(platformData, cylinderRadiusValue,
                              platformGen.levelHeight, basePosition);
+
+            // Solo se guarda la primera plataforma generada por nivel (la principal del
+            // camino); las extras del mismo nivel no se usan como puntos de conexion de escaleras.
+            if (!mainPathPlatforms.ContainsKey(pathPlatform.level))
+                mainPathPlatforms[pathPlatform.level] = platformCell;
         }
 
         //Debug.Log($"Camino generado: {path.Count} plataformas en {totalLevels} niveles");
+
+        if (ladderPlacer != null)
+            ladderPlacer.PlaceLadders();
+    }
+
+    // Plataforma principal del camino por nivel, usada por LadderPlacer para conectar niveles consecutivos
+    public Dictionary<int, CylinderPlatformObj> GetMainPathPlatforms()
+    {
+        return mainPathPlatforms;
     }
 
     // Aplica un material a todos los renderers del cilindro instanciado (el propio objeto y sus hijos)
@@ -337,6 +358,11 @@ public class CylinderRender : MonoBehaviour
         {
             DestroyImmediate(transform.GetChild(i).gameObject);
         }
+
+        mainPathPlatforms.Clear();
+
+        if (ladderPlacer != null)
+            ladderPlacer.ClearLadders();
 
         /* ResetCounters();
 
