@@ -46,9 +46,13 @@ public class CylinderPlatformObj : MonoBehaviour
     // Calcula la posicion en el mundo de la plataforma
     Vector3 CalculateWorldPosition(float angle, int level)
     {
+        return ComputeWorldPosition(angle, level, radius, levelHeight, basePosition);
+    }
 
-        //Debug.Log($"Calculando posición - Ángulo: {angle}, Nivel: {level}");
-
+    // Formula compartida angulo/nivel -> posicion en el mundo. Publica y estatica para que otros
+    // sistemas (como PuzzlePathPlacer) la reutilicen sin necesitar una instancia de esta clase.
+    public static Vector3 ComputeWorldPosition(float angle, int level, float radius, float levelHeight, Vector3 basePosition)
+    {
         // Convertir angulo a radianes
         float angleRad = angle * Mathf.Deg2Rad;
 
@@ -57,14 +61,10 @@ public class CylinderPlatformObj : MonoBehaviour
         float localZ = radius * Mathf.Sin(angleRad);
         float localY = level * levelHeight;
 
-        Vector3 position = new Vector3
-          ( basePosition.x + localX,
+        return new Vector3(
+            basePosition.x + localX,
             basePosition.y + localY,
-            basePosition.z + localZ );
-
-        //Debug.Log($"Posición calculada: {position}");
-
-        return position;
+            basePosition.z + localZ);
     }
 
     // Orienta la plataforma para que mire hacia afuera del cilindro
@@ -141,6 +141,15 @@ public class CylinderPlatformObj : MonoBehaviour
     public Transform GetAnchorR()
     {
         return anchorR;
+    }
+
+    // Ancho tangencial (mitad) de la plataforma, medido entre sus anchors L/R en espacio local
+    // (sin escala aplicada). Usado por CylinderRender para encadenar plataformas del mismo nivel
+    // por sus anchors, sin superponerse, sea cual sea el tamaño del prefab.
+    public float GetTangentialHalfWidth()
+    {
+        if (anchorL == null || anchorR == null) return 0f;
+        return Vector3.Distance(anchorL.localPosition, anchorR.localPosition) / 2f;
     }
 
     /*void OnDrawGizmosSelected()
