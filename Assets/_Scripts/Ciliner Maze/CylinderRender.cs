@@ -52,6 +52,8 @@ public class CylinderRender : MonoBehaviour
     [Header("Platform Settings")]
     public GameObject[] platformPrefabs; // Reemplaza temporalmente a platformRules mientras el sistema de reglas esta desactivado
     public float platformScale = 1f;
+    [Tooltip("Desactivado temporalmente mientras se verifica que el camino principal y las escaleras funcionen bien por si solos (deteccion de bloqueo por MainPath, etc.). Reactivar cuando ese trabajo este validado")]
+    public bool enablePuzzlePath = false;
 
     [Header("Cylinder Settings")]
     public bool overrideCylinderDimensions = false;
@@ -181,7 +183,12 @@ public class CylinderRender : MonoBehaviour
             return;
         }
 
-        List<PathPlatform> path = ruleManager.GeneratePath(totalLevels);
+        // Se le pasa al RuleManager el radio, la altura de nivel y la tolerancia de inclinacion
+        // de LadderPlacer para que el propio camino limite sus pasos de angulo entre niveles a lo
+        // que una escalera vertical puede conectar, en vez de generar pasos arbitrarios y luego
+        // tener que arreglar la conexion despues.
+        float maxLadderTilt = ladderPlacer != null ? ladderPlacer.maxTiltFromVertical : 45f;
+        List<PathPlatform> path = ruleManager.GeneratePath(totalLevels, cylinderRadiusValue, platformGen.levelHeight, maxLadderTilt);
 
         mainPathPlatforms.Clear();
         occupiedSlotsByLevel.Clear();
@@ -252,9 +259,12 @@ public class CylinderRender : MonoBehaviour
             ladderPlacer.PlaceLadders();
 
         // Puzzle Path: rampas alternativas, generadas despues del camino principal y las escaleras
-        // para saber que angulos estan realmente libres en cada nivel
-        if (puzzlePathPlacer != null)
+        // para saber que angulos estan realmente libres en cada nivel. Desactivado temporalmente
+        // via 'enablePuzzlePath' para poder validar el camino principal y las escaleras aislados.
+        if (enablePuzzlePath && puzzlePathPlacer != null)
             puzzlePathPlacer.PlaceRamps();
+        else if (puzzlePathPlacer != null)
+            puzzlePathPlacer.ClearRamps();
     }
 
     // Registra el tramo angular que ocupa una plataforma en su nivel, para que PuzzlePathPlacer
@@ -269,6 +279,7 @@ public class CylinderRender : MonoBehaviour
 
         slots.Add(new OccupiedSlot { angle = angle, halfWidthAngle = halfWidthAngle });
     }
+
 
     // Plataforma principal del camino por nivel, usada por LadderPlacer para conectar niveles consecutivos
     public Dictionary<int, CylinderPlatformObj> GetMainPathPlatforms()

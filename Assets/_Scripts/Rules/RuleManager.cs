@@ -39,9 +39,9 @@ public struct PathPlatform
 public class RuleManager : MonoBehaviour
 {
     [Header("Path - Random Walk")]
-    [Tooltip("Angulo minimo (en grados) que avanza el camino entre un nivel y el siguiente")]
+    [Tooltip("Angulo minimo (en grados) que avanza el camino entre un nivel y el siguiente. Se recorta automaticamente si supera el tope que impone la geometria de la escalera (ver GeneratePath)")]
     public float minStepAngle = 20f;
-    [Tooltip("Angulo maximo (en grados) que avanza el camino entre un nivel y el siguiente")]
+    [Tooltip("Angulo maximo (en grados) que avanza el camino entre un nivel y el siguiente. Se recorta automaticamente si supera el tope que impone la geometria de la escalera (ver GeneratePath)")]
     public float maxStepAngle = 100f;
     [Range(0f, 1f)]
     [Tooltip("Probabilidad de cambiar de direccion (horario/antihorario) en cada nivel")]
@@ -67,11 +67,22 @@ public class RuleManager : MonoBehaviour
     // Esto hace que el camino resultante sea distinto en cada partida y no siempre
     // tenga forma de espiral perfecta.
     // Solo usa los tags Spawn (nivel base), Normal (niveles intermedios) y Final (nivel mas alto).
-    public List<PathPlatform> GeneratePath(int totalLevels)
+    //
+    // 'radius', 'levelHeight' y 'maxLadderTiltAngle' acotan cuanto puede avanzar el angulo entre
+    // un nivel y el siguiente: si el paso fuera mas grande, la plataforma principal del nivel
+    // siguiente quedaria demasiado lejos angularmente para que LadderPlacer pueda conectarla con
+    // una escalera vertical. Se recorta el rango minStepAngle/maxStepAngle a ese tope, para que
+    // el camino en si mismo garantice que cada nivel puede tener su escalera, en vez de generar
+    // pasos arbitrarios y tener que arreglar la conexion despues.
+    public List<PathPlatform> GeneratePath(int totalLevels, float radius, float levelHeight, float maxLadderTiltAngle)
     {
         List<PathPlatform> path = new List<PathPlatform>();
 
         if (totalLevels <= 0) return path;
+
+        float maxStepForLadder = MaxStepAngleForTilt(radius, levelHeight, maxLadderTiltAngle);
+        float effectiveMaxStep = Mathf.Min(maxStepAngle, maxStepForLadder);
+        float effectiveMinStep = Mathf.Min(minStepAngle, effectiveMaxStep);
 
         float currentAngle = Random.Range(0f, 360f);
         float direction = Random.value < 0.5f ? 1f : -1f;
@@ -110,12 +121,24 @@ public class RuleManager : MonoBehaviour
                 if (Random.value < directionChangeChance)
                     direction *= -1f;
 
-                float step = Random.Range(minStepAngle, maxStepAngle) * direction;
+                float step = Random.Range(effectiveMinStep, effectiveMaxStep) * direction;
                 currentAngle = NormalizeAngle(currentAngle + step);
             }
         }
 
         return path;
+    }
+
+    // Angulo maximo (grados) que puede avanzar el camino entre un nivel y el siguiente sin que
+    // la conexion vertical entre sus plataformas principales supere maxLadderTiltAngle. Misma
+    // formula que usa PuzzlePathPlacer para su propio tope de inclinacion (atan2(run, radius)).
+    float MaxStepAngleForTilt(float radius, float levelHeight, float maxLadderTiltAngle)
+    {
+        if (radius <= 0f) return maxStepAngle;
+
+        float clampedTilt = Mathf.Clamp(maxLadderTiltAngle, 1f, 89f);
+        float maxRun = levelHeight / Mathf.Tan(clampedTilt * Mathf.Deg2Rad);
+        return Mathf.Atan2(maxRun, radius) * Mathf.Rad2Deg;
     }
 
     string GetTagForLevel(int level, int totalLevels)

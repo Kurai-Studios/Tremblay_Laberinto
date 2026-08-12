@@ -399,7 +399,7 @@ GameObject:
   - component: {fileID: 8559225880211341070}
   m_Layer: 0
   m_Name: plataforma-Spawn
-  m_TagString: Untagged
+  m_TagString: MainPath
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -436,10 +436,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CylinderPlatformObj
   tags:
   - Spawn
+  - MainPath
   platformMesh: {fileID: 4919983196619078132}
   platformCollider: {fileID: 4919983196619078132}
   anchorL: {fileID: 4507863727427144669}
   anchorR: {fileID: 8805714630807546392}
+  showAnchorGizmos: 1
 --- !u!1 &7802213496804275466
 GameObject:
   m_ObjectHideFlags: 0

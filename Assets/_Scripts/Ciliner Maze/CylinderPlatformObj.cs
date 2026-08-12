@@ -15,6 +15,10 @@ public class CylinderPlatformObj : MonoBehaviour
     [SerializeField] Transform anchorL;
     [SerializeField] Transform anchorR;
 
+    [Header("Debug")]
+    [Tooltip("Dibuja los anchors L/R como esferas de color en el Scene View, para verificar visualmente donde estan realmente ubicados")]
+    public bool showAnchorGizmos = true;
+
     private TowerPlatform platformData;
     private Vector3 worldPosition;
     private Vector3 basePosition;
@@ -51,7 +55,9 @@ public class CylinderPlatformObj : MonoBehaviour
 
     // Formula compartida angulo/nivel -> posicion en el mundo. Publica y estatica para que otros
     // sistemas (como PuzzlePathPlacer) la reutilicen sin necesitar una instancia de esta clase.
-    public static Vector3 ComputeWorldPosition(float angle, int level, float radius, float levelHeight, Vector3 basePosition)
+    // 'level' es float para permitir posiciones intermedias entre niveles (p. ej. los escalones
+    // de una rampa de PuzzlePathPlacer), ademas de los niveles enteros normales.
+    public static Vector3 ComputeWorldPosition(float angle, float level, float radius, float levelHeight, Vector3 basePosition)
     {
         // Convertir angulo a radianes
         float angleRad = angle * Mathf.Deg2Rad;
@@ -65,6 +71,45 @@ public class CylinderPlatformObj : MonoBehaviour
             basePosition.x + localX,
             basePosition.y + localY,
             basePosition.z + localZ);
+    }
+
+    // Verifica si hay otra plataforma (con su propio CylinderPlatformObj) fisicamente en medio
+    // del tramo recto entre dos puntos, mediante un raycast entre ambos. Se usa antes de colocar
+    // una escalera (LadderPlacer) o un tramo de PuzzlePathPlacer, para evitar que atraviese o
+    // quede oculto detras de una plataforma que ya ocupa ese camino (p. ej. una extra encadenada
+    // del mismo nivel). 'requiredTag' filtra que plataformas cuentan como bloqueo (p. ej. "MainPath"
+    // para ignorar objetos que no sean plataformas del camino principal); null/vacio = cualquiera
+    // cuenta. 'ignoreA'/'ignoreB' son las plataformas de origen/destino de la conexion y no
+    // cuentan como bloqueo aunque el rayo las roce cerca de sus extremos.
+    public static bool IsLineBlocked(Vector3 from, Vector3 to, string requiredTag = null, CylinderPlatformObj ignoreA = null, CylinderPlatformObj ignoreB = null)
+    {
+        return IsLineBlocked(from, to, out _, requiredTag, ignoreA, ignoreB);
+    }
+
+    // Misma comprobacion, pero devolviendo ademas el punto exacto del impacto que bloqueo la
+    // linea (o Vector3.zero si no hubo bloqueo). Usado por LadderPlacer/PuzzlePathPlacer para
+    // dibujar un gizmo de debug y ver donde/si realmente esta detectando la otra plataforma.
+    public static bool IsLineBlocked(Vector3 from, Vector3 to, out Vector3 blockingPoint, string requiredTag = null, CylinderPlatformObj ignoreA = null, CylinderPlatformObj ignoreB = null)
+    {
+        blockingPoint = Vector3.zero;
+
+        Vector3 delta = to - from;
+        float distance = delta.magnitude;
+        if (distance <= 0.001f) return false;
+
+        RaycastHit[] hits = Physics.RaycastAll(from, delta / distance, distance);
+        foreach (RaycastHit hit in hits)
+        {
+            CylinderPlatformObj hitPlatform = hit.collider.GetComponentInParent<CylinderPlatformObj>();
+            if (hitPlatform == null) continue;
+            if (hitPlatform == ignoreA || hitPlatform == ignoreB) continue;
+            if (!string.IsNullOrEmpty(requiredTag) && !hitPlatform.HasTag(requiredTag)) continue;
+
+            blockingPoint = hit.point;
+            return true;
+        }
+
+        return false;
     }
 
     // Orienta la plataforma para que mire hacia afuera del cilindro
@@ -150,6 +195,26 @@ public class CylinderPlatformObj : MonoBehaviour
     {
         if (anchorL == null || anchorR == null) return 0f;
         return Vector3.Distance(anchorL.localPosition, anchorR.localPosition) / 2f;
+    }
+
+    // Dibuja los anchors L/R como esferas de color, para poder verificar en el Scene View donde
+    // estan realmente ubicados (util al depurar por que un raycast entre anchors no detecta o
+    // detecta de mas otra plataforma en LadderPlacer/PuzzlePathPlacer)
+    void OnDrawGizmos()
+    {
+        if (!showAnchorGizmos) return;
+
+        if (anchorL != null)
+        {
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawSphere(anchorL.position, 0.15f);
+        }
+
+        if (anchorR != null)
+        {
+            Gizmos.color = new Color(1f, 0.5f, 0f); // naranja
+            Gizmos.DrawSphere(anchorR.position, 0.15f);
+        }
     }
 
     /*void OnDrawGizmosSelected()
