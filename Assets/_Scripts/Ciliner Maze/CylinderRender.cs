@@ -52,6 +52,8 @@ public class CylinderRender : MonoBehaviour
     [Header("Platform Settings")]
     public GameObject[] platformPrefabs; // Reemplaza temporalmente a platformRules mientras el sistema de reglas esta desactivado
     public float platformScale = 1f;
+    [Tooltip("Desactivado temporalmente para poder ver y diagnosticar el camino principal (plataformas + extras encadenadas) sin el ruido visual de las escaleras. Reactivar cuando el camino principal este validado")]
+    public bool enableLadders = false;
     [Tooltip("Desactivado temporalmente mientras se verifica que el camino principal y las escaleras funcionen bien por si solos (deteccion de bloqueo por MainPath, etc.). Reactivar cuando ese trabajo este validado")]
     public bool enablePuzzlePath = false;
 
@@ -72,6 +74,11 @@ public class CylinderRender : MonoBehaviour
     // Plataforma principal del camino por nivel (la primera generada en ese nivel; las
     // extras del mismo nivel no cuentan). LadderPlacer la usa para conectar niveles consecutivos.
     private Dictionary<int, CylinderPlatformObj> mainPathPlatforms = new Dictionary<int, CylinderPlatformObj>();
+
+    // Anchors (L o R) de plataformas principales que ya tienen una plataforma extra encadenada
+    // pegada a ellos (ver GetOccupiedAnchors). Solo el PRIMER eslabon de una cadena de extras
+    // toca el anchor de la principal; los siguientes se pegan entre si, no a la principal.
+    private readonly HashSet<Transform> occupiedAnchors = new HashSet<Transform>();
 
     // Todos los tramos angulares ocupados por nivel (principal + extras + trampas). PuzzlePathPlacer
     // lo usa para encontrar espacio libre donde encajar una rampa.
@@ -183,14 +190,18 @@ public class CylinderRender : MonoBehaviour
             return;
         }
 
-        // Se le pasa al RuleManager el radio, la altura de nivel y la tolerancia de inclinacion
-        // de LadderPlacer para que el propio camino limite sus pasos de angulo entre niveles a lo
-        // que una escalera vertical puede conectar, en vez de generar pasos arbitrarios y luego
+        // Se le pasa al RuleManager el radio, la altura de nivel, la tolerancia de inclinacion
+        // de LadderPlacer y el angulo que ocupa el anchor L/R de una plataforma principal (tomando
+        // "Normal" como representativa; hoy los 4 prefabs comparten el mismo offset de anchor)
+        // para que el propio camino apunte sus pasos de angulo entre niveles al valor que deja
+        // los anchors casi alineados verticalmente, en vez de generar pasos arbitrarios y luego
         // tener que arreglar la conexion despues.
         float maxLadderTilt = ladderPlacer != null ? ladderPlacer.maxTiltFromVertical : 45f;
-        List<PathPlatform> path = ruleManager.GeneratePath(totalLevels, cylinderRadiusValue, platformGen.levelHeight, maxLadderTilt);
+        float connectorHalfWidthAngle = GetConnectorHalfWidthAngle(cylinderRadiusValue);
+        List<PathPlatform> path = ruleManager.GeneratePath(totalLevels, cylinderRadiusValue, platformGen.levelHeight, maxLadderTilt, connectorHalfWidthAngle);
 
         mainPathPlatforms.Clear();
+        occupiedAnchors.Clear();
         occupiedSlotsByLevel.Clear();
         generatedCylinderRadius = cylinderRadiusValue;
         generatedBasePosition = basePosition;
@@ -200,6 +211,11 @@ public class CylinderRender : MonoBehaviour
         // principal (no encadenada), que es siempre la primera de cada nivel.
         float chainAngle = 0f;
         float chainHalfWidth = 0f;
+
+        // Niveles cuyo primer eslabon de cadena (el que toca el anchor de la principal) ya se
+        // proceso, para no volver a marcar ese anchor con los eslabones siguientes (que se pegan
+        // entre si, no a la principal).
+        HashSet<int> levelsWithAnchorMarked = new HashSet<int>();
 
         foreach (PathPlatform pathPlatform in path)
         {
@@ -251,12 +267,37 @@ public class CylinderRender : MonoBehaviour
             // camino); las extras del mismo nivel no se usan como puntos de conexion de escaleras.
             if (!mainPathPlatforms.ContainsKey(pathPlatform.level))
                 mainPathPlatforms[pathPlatform.level] = platformCell;
+
+            // Si esta es la primera plataforma encadenada del nivel, queda pegada directamente al
+            // anchor de la principal (el lado 'freeSide' que eligio RuleManager): marcar ese
+            // anchor como ocupado para que LadderPlacer no haga llegar una escalera justo ahi.
+            if (pathPlatform.isChained && levelsWithAnchorMarked.Add(pathPlatform.level)
+                && mainPathPlatforms.TryGetValue(pathPlatform.level, out CylinderPlatformObj levelMain))
+            {
+                Transform touchedAnchor = ClosestAnchorTo(levelMain, platformCell.transform.position);
+                if (touchedAnchor != null)
+                    occupiedAnchors.Add(touchedAnchor);
+            }
         }
 
         //Debug.Log($"Camino generado: {path.Count} plataformas en {totalLevels} niveles");
 
-        if (ladderPlacer != null)
+        // Este proyecto tiene 'Physics.autoSyncTransforms' desactivado (Edit > Project Settings >
+        // Physics), asi que los colliders de las plataformas recien reposicionadas (transform.position
+        // asignado arriba, en este mismo frame) NO quedan sincronizados con el motor de fisica hasta
+        // el proximo paso de simulacion o una llamada explicita a esto. Sin este sync, cualquier
+        // Physics.Raycast/RaycastAll/OverlapSphere hecho en el resto de este metodo (el bloqueo de
+        // escaleras en LadderPlacer, los rayos de deteccion de anchor en CylinderPlatformObj, etc.)
+        // consulta posiciones VIEJAS de los colliders y practicamente nunca detecta nada real.
+        Physics.SyncTransforms();
+
+        // Escaleras: desactivadas temporalmente via 'enableLadders' para poder ver y diagnosticar
+        // el camino principal (plataformas + extras encadenadas) por si solo, sin el ruido visual
+        // de las escaleras encima.
+        if (enableLadders && ladderPlacer != null)
             ladderPlacer.PlaceLadders();
+        else if (ladderPlacer != null)
+            ladderPlacer.ClearLadders();
 
         // Puzzle Path: rampas alternativas, generadas despues del camino principal y las escaleras
         // para saber que angulos estan realmente libres en cada nivel. Desactivado temporalmente
@@ -280,6 +321,21 @@ public class CylinderRender : MonoBehaviour
         slots.Add(new OccupiedSlot { angle = angle, halfWidthAngle = halfWidthAngle });
     }
 
+    // De los dos anchors (L/R) de una plataforma, devuelve el mas cercano a una posicion dada.
+    // Usado para saber cual de los dos queda pegado a una plataforma extra recien encadenada.
+    Transform ClosestAnchorTo(CylinderPlatformObj platform, Vector3 position)
+    {
+        Transform anchorL = platform.GetAnchorL();
+        Transform anchorR = platform.GetAnchorR();
+
+        if (anchorL == null) return anchorR;
+        if (anchorR == null) return anchorL;
+
+        float distL = Vector3.Distance(anchorL.position, position);
+        float distR = Vector3.Distance(anchorR.position, position);
+
+        return distL <= distR ? anchorL : anchorR;
+    }
 
     // Plataforma principal del camino por nivel, usada por LadderPlacer para conectar niveles consecutivos
     public Dictionary<int, CylinderPlatformObj> GetMainPathPlatforms()
@@ -291,6 +347,13 @@ public class CylinderRender : MonoBehaviour
     public Dictionary<int, List<OccupiedSlot>> GetOccupiedSlots()
     {
         return occupiedSlotsByLevel;
+    }
+
+    // Anchors de plataformas principales que ya tienen una plataforma extra pegada, usado por
+    // LadderPlacer para no hacer llegar una escalera justo al punto donde ya hay otra plataforma.
+    public HashSet<Transform> GetOccupiedAnchors()
+    {
+        return occupiedAnchors;
     }
 
     // Radio, altura de nivel y posicion base usados en la ultima generacion, para que
@@ -337,6 +400,22 @@ public class CylinderRender : MonoBehaviour
         angle %= 360f;
         if (angle < 0f) angle += 360f;
         return angle;
+    }
+
+    // Angulo (grados) que ocupa, a un radio dado, el anchor L/R del prefab principal del camino
+    // (se usa "Normal" como representativo: hoy los 4 prefabs de plataforma comparten el mismo
+    // offset de anchor). RuleManager lo usa para apuntar sus pasos al angulo que deja los anchors
+    // de dos niveles consecutivos casi alineados verticalmente (ver GeneratePath).
+    float GetConnectorHalfWidthAngle(float radius)
+    {
+        GameObject normalPrefab = GetPrefabByTag("Normal");
+        if (normalPrefab == null) return 0f;
+
+        CylinderPlatformObj prefabData = normalPrefab.GetComponent<CylinderPlatformObj>();
+        if (prefabData == null) return 0f;
+
+        float halfWidth = prefabData.GetTangentialHalfWidth() * platformScale;
+        return HalfWidthToAngle(halfWidth, radius);
     }
 
     // Busca en platformPrefabs el primer prefab cuyo CylinderPlatformObj tenga el tag indicado
@@ -479,6 +558,7 @@ public class CylinderRender : MonoBehaviour
         }
 
         mainPathPlatforms.Clear();
+        occupiedAnchors.Clear();
         occupiedSlotsByLevel.Clear();
 
         if (ladderPlacer != null)

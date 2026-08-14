@@ -2266,6 +2266,7 @@ MonoBehaviour:
   - {fileID: 5721999424188059987, guid: 710f7597537c74e4daa5389d613d8c0b, type: 3}
   - {fileID: 5721999424188059987, guid: e9afa01f168a11c409fc2912a2a07057, type: 3}
   platformScale: 4
+  enableLadders: 0
   enablePuzzlePath: 0
   overrideCylinderDimensions: 1
   cylinderRadius: 6

@@ -18,6 +18,10 @@ public class CylinderPlatformObj : MonoBehaviour
     [Header("Debug")]
     [Tooltip("Dibuja los anchors L/R como esferas de color en el Scene View, para verificar visualmente donde estan realmente ubicados")]
     public bool showAnchorGizmos = true;
+    [Tooltip("Lanza un rayo desde cada anchor hacia afuera (en su eje X, alejandose del centro de la plataforma) buscando si hay otra plataforma conectada justo al lado (p. ej. una extra encadenada, o la plataforma del nivel siguiente), y lo dibuja en el Scene View: verde si encontro otra plataforma, gris si no encontro nada dentro de anchorConnectionCheckDistance")]
+    public bool showAnchorConnectionRays = true;
+    [Tooltip("Distancia (unidades de mundo) que recorre el rayo de deteccion de cada anchor")]
+    public float anchorConnectionCheckDistance = 2f;
 
     private TowerPlatform platformData;
     private Vector3 worldPosition;
@@ -199,21 +203,99 @@ public class CylinderPlatformObj : MonoBehaviour
 
     // Dibuja los anchors L/R como esferas de color, para poder verificar en el Scene View donde
     // estan realmente ubicados (util al depurar por que un raycast entre anchors no detecta o
-    // detecta de mas otra plataforma en LadderPlacer/PuzzlePathPlacer)
+    // detecta de mas otra plataforma en LadderPlacer/PuzzlePathPlacer), y opcionalmente el rayo
+    // de deteccion de conexion de cada uno (ver CheckAnchorConnection). Cuando un anchor detecta
+    // otra plataforma conectada, tanto su esfera como el rayo se pintan de rojo (en vez del color
+    // normal cian/naranja) para que sea obvio de un vistazo cual anchor esta conectado.
     void OnDrawGizmos()
     {
-        if (!showAnchorGizmos) return;
+        bool leftConnected = false;
+        bool rightConnected = false;
+        Vector3 leftHitPoint = Vector3.zero;
+        Vector3 rightHitPoint = Vector3.zero;
 
-        if (anchorL != null)
+        if (showAnchorGizmos || showAnchorConnectionRays)
         {
-            Gizmos.color = Color.cyan;
-            Gizmos.DrawSphere(anchorL.position, 0.15f);
+            // El proyecto tiene 'Physics.autoSyncTransforms' desactivado (Edit > Project Settings >
+            // Physics): si alguna plataforma se reposiciono por script hace poco (p. ej. al generar
+            // la torre) y todavia no corrio un paso de fisica, sus colliders quedan desincronizados
+            // y el raycast de abajo no detecta nada real. Forzar el sync antes de cada rayo para que
+            // este gizmo sea confiable sin depender de cuando corre el proximo FixedUpdate.
+            Physics.SyncTransforms();
+
+            // Cada anchor apunta hacia afuera en la MISMA direccion en la que ya esta desplazado
+            // del centro de la plataforma (anchorL esta del lado -X local, anchorR del lado +X),
+            // asi que el rayo sigue alejandose en ese mismo sentido en vez de volver hacia adentro.
+            if (anchorL != null) leftConnected = CheckAnchorConnection(anchorL, -1f, out leftHitPoint);
+            if (anchorR != null) rightConnected = CheckAnchorConnection(anchorR, 1f, out rightHitPoint);
         }
 
-        if (anchorR != null)
+        if (showAnchorGizmos)
         {
-            Gizmos.color = new Color(1f, 0.5f, 0f); // naranja
-            Gizmos.DrawSphere(anchorR.position, 0.15f);
+            if (anchorL != null)
+            {
+                Gizmos.color = leftConnected ? Color.red : Color.cyan;
+                Gizmos.DrawSphere(anchorL.position, 0.15f);
+            }
+
+            if (anchorR != null)
+            {
+                Gizmos.color = rightConnected ? Color.red : new Color(1f, 0.5f, 0f); // naranja si libre
+                Gizmos.DrawSphere(anchorR.position, 0.15f);
+            }
+        }
+
+        if (showAnchorConnectionRays)
+        {
+            DrawAnchorConnectionRay(anchorL, leftConnected, leftHitPoint);
+            DrawAnchorConnectionRay(anchorR, rightConnected, rightHitPoint);
+        }
+    }
+
+    // Lanza un rayo desde el anchor a lo largo de su eje X (multiplicado por 'outwardSign': -1
+    // para el anchor izquierdo, +1 para el derecho) buscando si hay otra plataforma (con su
+    // propio CylinderPlatformObj, ignorando esta misma) conectada justo al lado — el uso previsto
+    // es detectar el anchor de la plataforma vecina encadenada o la del siguiente nivel. Se
+    // recalcula en cada dibujado (no se cachea) para reflejar siempre la posicion actual de las
+    // plataformas en el Scene View. 'hitPoint' es el punto de impacto si se encontro algo, o el
+    // extremo del rayo (a anchorConnectionCheckDistance) si no.
+    bool CheckAnchorConnection(Transform anchor, float outwardSign, out Vector3 hitPoint)
+    {
+        Vector3 origin = anchor.position;
+        Vector3 direction = anchor.right * outwardSign;
+        hitPoint = origin + direction * anchorConnectionCheckDistance;
+
+        RaycastHit[] hits = Physics.RaycastAll(origin, direction, anchorConnectionCheckDistance);
+        float closestDistance = float.MaxValue;
+        bool found = false;
+
+        foreach (RaycastHit hit in hits)
+        {
+            CylinderPlatformObj hitPlatform = hit.collider.GetComponentInParent<CylinderPlatformObj>();
+            if (hitPlatform == null || hitPlatform == this) continue;
+            if (hit.distance >= closestDistance) continue;
+
+            closestDistance = hit.distance;
+            hitPoint = hit.point;
+            found = true;
+        }
+
+        return found;
+    }
+
+    // Dibuja el rayo de deteccion de un anchor: rojo (linea + esfera en el punto de impacto) si
+    // encontro otra plataforma conectada, gris si no encontro nada dentro de anchorConnectionCheckDistance.
+    void DrawAnchorConnectionRay(Transform anchor, bool connected, Vector3 hitPoint)
+    {
+        if (anchor == null) return;
+
+        Gizmos.color = connected ? Color.red : Color.gray;
+        Gizmos.DrawLine(anchor.position, hitPoint);
+
+        if (connected)
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawSphere(hitPoint, 0.08f);
         }
     }
 
