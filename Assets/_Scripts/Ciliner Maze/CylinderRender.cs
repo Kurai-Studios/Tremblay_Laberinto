@@ -212,6 +212,14 @@ public class CylinderRender : MonoBehaviour
         float chainAngle = 0f;
         float chainHalfWidth = 0f;
 
+        // Angulo y medio-ancho (angular y tangencial/lineal) de la plataforma de Spawn (nivel 0),
+        // guardados para poder rellenar todo el nivel 0 con plataformas Normal encadenadas a
+        // partir de su anchor (ver el relleno de anillo despues del foreach de abajo).
+        float spawnAngle = 0f;
+        float spawnHalfWidth = 0f;
+        float spawnHalfWidthAngle = 0f;
+        bool hasSpawnPlatform = false;
+
         // Niveles cuyo primer eslabon de cadena (el que toca el anchor de la principal) ya se
         // proceso, para no volver a marcar ese anchor con los eslabones siguientes (que se pegan
         // entre si, no a la principal).
@@ -245,6 +253,14 @@ public class CylinderRender : MonoBehaviour
 
             chainAngle = finalAngle;
             chainHalfWidth = halfWidth;
+
+            if (pathPlatform.level == 0 && !pathPlatform.isChained)
+            {
+                hasSpawnPlatform = true;
+                spawnAngle = finalAngle;
+                spawnHalfWidth = halfWidth;
+                spawnHalfWidthAngle = halfWidthAngle;
+            }
 
             RecordOccupiedSlot(pathPlatform.level, finalAngle, halfWidthAngle);
 
@@ -281,6 +297,14 @@ public class CylinderRender : MonoBehaviour
         }
 
         //Debug.Log($"Camino generado: {path.Count} plataformas en {totalLevels} niveles");
+
+        // Rellenar el nivel de Spawn (nivel 0) por completo con plataformas Normal, encadenadas
+        // por anchors igual que las extras de niveles intermedios, dando toda la vuelta al
+        // cilindro a partir del anchor de Spawn. Asi el nivel 0 queda 100% caminable y el
+        // jugador siempre puede alcanzar la escalera/rampa de salida sin importar en que angulo
+        // haya quedado, en vez de depender de una unica plataforma de Spawn aislada.
+        if (hasSpawnPlatform)
+            FillSpawnLevelRing(spawnAngle, spawnHalfWidth, spawnHalfWidthAngle, cylinderRadiusValue, basePosition);
 
         // Este proyecto tiene 'Physics.autoSyncTransforms' desactivado (Edit > Project Settings >
         // Physics), asi que los colliders de las plataformas recien reposicionadas (transform.position
@@ -319,6 +343,73 @@ public class CylinderRender : MonoBehaviour
         }
 
         slots.Add(new OccupiedSlot { angle = angle, halfWidthAngle = halfWidthAngle });
+    }
+
+    // Rellena todo el nivel 0 con plataformas "Normal" encadenadas por anchors, partiendo del
+    // anchor de la plataforma de Spawn y dando toda la vuelta al cilindro en una sola direccion,
+    // con el mismo calculo de paso angular (anchor a anchor, sin superponerse ni dejar hueco) que
+    // usan las extras encadenadas de los niveles intermedios. Se detiene cuando ya se cubrio todo
+    // el arco disponible (360 grados menos el propio ancho de Spawn), es decir, cuando el proximo
+    // eslabon cerraria el anillo volviendo a tocar a Spawn desde el otro lado.
+    //
+    // La condicion de corte se basa en sumar los angleStep ya usados ('sweptAngle') en vez de
+    // comparar el angulo del candidato contra el de Spawn con un chequeo de superposicion: ese
+    // chequeo comparaba una diferencia de angulos (via DeltaAngle) contra una suma de dos
+    // conversiones atan2 independientes, y el primer eslabon (que por construccion queda
+    // exactamente tangente al anchor de Spawn, sin superponerse) terminaba marcado como
+    // superpuesto por un error de redondeo de punto flotante entre ambos caminos de calculo,
+    // frenando el relleno antes de agregar ni una sola plataforma.
+    void FillSpawnLevelRing(float spawnAngle, float spawnHalfWidth, float spawnHalfWidthAngle, float cylinderRadiusValue, Vector3 basePosition)
+    {
+        GameObject normalPrefab = GetPrefabByTag("Normal");
+        if (normalPrefab == null) return;
+
+        CylinderPlatformObj normalPrefabData = normalPrefab.GetComponent<CylinderPlatformObj>();
+        if (normalPrefabData == null) return;
+
+        float ringHalfWidth = normalPrefabData.GetTangentialHalfWidth() * platformScale;
+        float ringHalfWidthAngle = HalfWidthToAngle(ringHalfWidth, cylinderRadiusValue);
+        if (ringHalfWidthAngle <= 0f) return;
+
+        float chainAngle = spawnAngle;
+        float chainHalfWidth = spawnHalfWidth;
+
+        // Arco total disponible para el anillo: la vuelta completa menos el ancho que ya ocupa
+        // la propia plataforma de Spawn (sus dos medios-anchos, a ambos lados de su centro).
+        float remainingArc = 360f - (spawnHalfWidthAngle * 2f);
+        float sweptAngle = 0f;
+
+        // Salvaguarda contra loop infinito: nunca deberian hacer falta mas eslabones que los que
+        // entran, en el peor caso, en una vuelta completa.
+        int maxRingPlatforms = Mathf.CeilToInt(360f / Mathf.Max(1f, ringHalfWidthAngle)) + 1;
+
+        for (int i = 0; i < maxRingPlatforms; i++)
+        {
+            float angleStep = HalfWidthToAngle(chainHalfWidth, cylinderRadiusValue) + ringHalfWidthAngle;
+
+            // Si este eslabon ya no entra en el arco restante, el anillo esta completo: dejar de
+            // agregar plataformas en vez de superponerse a Spawn por el otro lado.
+            if (sweptAngle + angleStep > remainingArc)
+                break;
+
+            float candidateAngle = NormalizeAngle(chainAngle + angleStep);
+
+            RecordOccupiedSlot(0, candidateAngle, ringHalfWidthAngle);
+
+            GameObject ringPlatform = Instantiate(normalPrefab, transform);
+            ringPlatform.transform.localScale = Vector3.one * platformScale;
+
+            CylinderPlatformObj ringPlatformCell = ringPlatform.GetComponent<CylinderPlatformObj>();
+            if (ringPlatformCell != null)
+            {
+                TowerPlatform ringPlatformData = new TowerPlatform(0, candidateAngle);
+                ringPlatformCell.Init(ringPlatformData, cylinderRadiusValue, platformGen.levelHeight, basePosition);
+            }
+
+            chainAngle = candidateAngle;
+            chainHalfWidth = ringHalfWidth;
+            sweptAngle += angleStep;
+        }
     }
 
     // De los dos anchors (L/R) de una plataforma, devuelve el mas cercano a una posicion dada.

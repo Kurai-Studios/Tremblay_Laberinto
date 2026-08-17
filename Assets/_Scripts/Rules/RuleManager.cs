@@ -149,6 +149,19 @@ public class RuleManager : MonoBehaviour
             {
                 bool isDirectionChange = Random.value < directionChangeChance;
 
+                // Regla: el nivel Final tiene que llegar SI O SI por escalera (un unico tramo
+                // garantizado, el que conecta totalLevels-2 con totalLevels-1), para que el
+                // jugador siempre pueda completar el camino sin depender de que el puzzle path
+                // haya cubierto ese tramo. Lo mismo aplica al nivel de Spawn (nivel 0): necesita
+                // un punto garantizado de salida por escalera hacia el nivel 1, para que el
+                // jugador nunca arranque encerrado. En ambos casos se fuerza el paso "alineado"
+                // (nunca un salto libre de cambio de direccion), para que LadderPlacer siempre
+                // encuentre un par de anchors verticalmente alineado en ese tramo (ver comentario
+                // de mas abajo sobre por que el paso alineado garantiza esto).
+                bool mustGuaranteeLadder = level == totalLevels - 2 || level == 0;
+                if (mustGuaranteeLadder)
+                    isDirectionChange = false;
+
                 if (isDirectionChange)
                 {
                     direction *= -1f;
