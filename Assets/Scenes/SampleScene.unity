@@ -2204,7 +2204,6 @@ GameObject:
   - component: {fileID: 607208736}
   - component: {fileID: 607208737}
   - component: {fileID: 607208738}
-  - component: {fileID: 607208739}
   m_Layer: 0
   m_Name: CylinderMazeManager
   m_TagString: Untagged
@@ -2259,7 +2258,6 @@ MonoBehaviour:
   platformGen: {fileID: 607208734}
   ruleManager: {fileID: 607208737}
   ladderPlacer: {fileID: 607208738}
-  puzzlePathPlacer: {fileID: 607208739}
   platformPrefabs:
   - {fileID: 5721999424188059987, guid: a6184de758ffd7e4c9244a366177289c, type: 3}
   - {fileID: 5721999424188059987, guid: 1697ee733ad02714698ced087f190d93, type: 3}
@@ -2267,7 +2265,6 @@ MonoBehaviour:
   - {fileID: 5721999424188059987, guid: e9afa01f168a11c409fc2912a2a07057, type: 3}
   platformScale: 4
   enableLadders: 1
-  enablePuzzlePath: 0
   overrideCylinderDimensions: 1
   cylinderRadius: 6
   cylinderHeight: 40
@@ -2290,8 +2287,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RuleManager
   minStepAngle: 20
   maxStepAngle: 100
-  directionChangeChance: 0.5
-  minExtraPlatformsPerLevel: 1
+  directionChangeChance: 0.3
+  minExtraPlatformsPerLevel: 2
   maxExtraPlatformsPerLevel: 3
   trapChance: 0.25
 --- !u!114 &607208738
@@ -2310,25 +2307,6 @@ MonoBehaviour:
   ladderPrefab: {fileID: 8978938229178587651, guid: 7219b2549c433084da86677e7a1f9bcb, type: 3}
   mainPathTag: MainPath
   maxTiltFromVertical: 5
-  showDebugRays: 1
---- !u!114 &607208739
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 607208733}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e6b70d9a0d792774a9ecd9bed896b1e2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PuzzlePathPlacer
-  cylinderRender: {fileID: 607208736}
-  rampAngleSpan: 40
-  placementAttempts: 12
-  maxRampTiltAngle: 25
-  minRampSegments: 2
-  maxRampSegments: 4
   showDebugRays: 1
 --- !u!1 &640958389
 GameObject:

@@ -29,6 +29,16 @@ public class CylinderPlatformObj : MonoBehaviour
     private float radius;
     private float levelHeight;
 
+    // Anchor "efectivo" de L/R: cuando CylinderRender encadena una o mas plataformas extra desde
+    // el anchor de salida de esta (ver GenerateTower), ese anchor propio queda literalmente tocado
+    // por la primera extra de la cadena, asi que ya no sirve como punto de enganche libre para una
+    // escalera. El anchor EFECTIVO pasa a ser el extremo libre del ULTIMO eslabon de la cadena
+    // (seteado via SetEffectiveAnchorL/R); GetAnchorL/R lo devuelven en vez del propio si esta
+    // seteado, asi que LadderPlacer sigue funcionando sin cambios, sin necesidad de saber que hay
+    // una cadena de por medio.
+    private Transform effectiveAnchorL;
+    private Transform effectiveAnchorR;
+
     // Inicializa la plataforma con los datos generados
     public void Init(TowerPlatform data, float cylinderRadius, float levelHeight, Vector3 basePosition)
     {
@@ -79,20 +89,20 @@ public class CylinderPlatformObj : MonoBehaviour
 
     // Verifica si hay otra plataforma (con su propio CylinderPlatformObj) fisicamente en medio
     // del tramo recto entre dos puntos, mediante un raycast entre ambos. Se usa antes de colocar
-    // una escalera (LadderPlacer) o un tramo de PuzzlePathPlacer, para evitar que atraviese o
-    // quede oculto detras de una plataforma que ya ocupa ese camino (p. ej. una extra encadenada
-    // del mismo nivel). 'requiredTag' filtra que plataformas cuentan como bloqueo (p. ej. "MainPath"
-    // para ignorar objetos que no sean plataformas del camino principal); null/vacio = cualquiera
-    // cuenta. 'ignoreA'/'ignoreB' son las plataformas de origen/destino de la conexion y no
-    // cuentan como bloqueo aunque el rayo las roce cerca de sus extremos.
+    // una escalera (LadderPlacer), para evitar que atraviese o quede oculto detras de una
+    // plataforma que ya ocupa ese camino (p. ej. una extra encadenada del mismo nivel).
+    // 'requiredTag' filtra que plataformas cuentan como bloqueo (p. ej. "MainPath" para ignorar
+    // objetos que no sean plataformas del camino principal); null/vacio = cualquiera cuenta.
+    // 'ignoreA'/'ignoreB' son las plataformas de origen/destino de la conexion y no cuentan como
+    // bloqueo aunque el rayo las roce cerca de sus extremos.
     public static bool IsLineBlocked(Vector3 from, Vector3 to, string requiredTag = null, CylinderPlatformObj ignoreA = null, CylinderPlatformObj ignoreB = null)
     {
         return IsLineBlocked(from, to, out _, requiredTag, ignoreA, ignoreB);
     }
 
     // Misma comprobacion, pero devolviendo ademas el punto exacto del impacto que bloqueo la
-    // linea (o Vector3.zero si no hubo bloqueo). Usado por LadderPlacer/PuzzlePathPlacer para
-    // dibujar un gizmo de debug y ver donde/si realmente esta detectando la otra plataforma.
+    // linea (o Vector3.zero si no hubo bloqueo). Usado por LadderPlacer para dibujar un gizmo de
+    // debug y ver donde/si realmente esta detectando la otra plataforma.
     public static bool IsLineBlocked(Vector3 from, Vector3 to, out Vector3 blockingPoint, string requiredTag = null, CylinderPlatformObj ignoreA = null, CylinderPlatformObj ignoreB = null)
     {
         blockingPoint = Vector3.zero;
@@ -101,7 +111,22 @@ public class CylinderPlatformObj : MonoBehaviour
         float distance = delta.magnitude;
         if (distance <= 0.001f) return false;
 
-        RaycastHit[] hits = Physics.RaycastAll(from, delta / distance, distance);
+        Vector3 direction = delta / distance;
+
+        // 'from'/'to' viven literalmente sobre el collider de la plataforma de origen/destino (son
+        // sus anchors reales): sin este margen, el propio rayo detectaria esa plataforma como
+        // "bloqueo" en su propio punto de partida/llegada. Esto pasa incluso con 'ignoreA'/'ignoreB'
+        // seteados: cuando el anchor efectivo es el extremo de una cadena de extras (ver
+        // CylinderPlatformObj.SetEffectiveAnchorL/R), el collider que esta ahi es el de la ULTIMA
+        // EXTRA de la cadena, no el de la plataforma principal que 'ignoreA/B' excluyen. Recortar
+        // un margen chico en cada punta evita depender de conocer todos los objetos "propios" del
+        // tramo, y solo detecta un obstaculo real en el medio del recorrido.
+        float inset = Mathf.Min(0.15f, distance * 0.1f);
+        Vector3 insetFrom = from + direction * inset;
+        float insetDistance = Mathf.Max(0f, distance - inset * 2f);
+        if (insetDistance <= 0.001f) return false;
+
+        RaycastHit[] hits = Physics.RaycastAll(insetFrom, direction, insetDistance);
         foreach (RaycastHit hit in hits)
         {
             CylinderPlatformObj hitPlatform = hit.collider.GetComponentInParent<CylinderPlatformObj>();
@@ -181,15 +206,29 @@ public class CylinderPlatformObj : MonoBehaviour
         return tags;
     }
 
-    // Anchors L/R usados por LadderPlacer para conectar escaleras
+    // Anchors L/R usados por LadderPlacer para conectar escaleras. Devuelven el anchor EFECTIVO
+    // (ver 'effectiveAnchorL/R') si esta plataforma tiene una cadena de extras enganchada de ese
+    // lado; si no, el anchor propio de siempre.
     public Transform GetAnchorL()
     {
-        return anchorL;
+        return effectiveAnchorL != null ? effectiveAnchorL : anchorL;
     }
 
     public Transform GetAnchorR()
     {
-        return anchorR;
+        return effectiveAnchorR != null ? effectiveAnchorR : anchorR;
+    }
+
+    // Usado por CylinderRender al cerrar una cadena de extras: redirige el anchor L/R propio
+    // (ya tocado por el primer eslabon de la cadena) al extremo libre del ultimo eslabon.
+    public void SetEffectiveAnchorL(Transform anchor)
+    {
+        effectiveAnchorL = anchor;
+    }
+
+    public void SetEffectiveAnchorR(Transform anchor)
+    {
+        effectiveAnchorR = anchor;
     }
 
     // Ancho tangencial (mitad) de la plataforma, medido entre sus anchors L/R en espacio local

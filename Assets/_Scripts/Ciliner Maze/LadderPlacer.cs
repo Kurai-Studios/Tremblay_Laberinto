@@ -46,6 +46,20 @@ public class LadderPlacer : MonoBehaviour
     }
     private readonly List<DebugLineCheck> debugChecks = new List<DebugLineCheck>();
 
+    // Niveles (el inferior de cada conexion, mismo criterio de 'level' que PlaceLadders) donde NO
+    // se pudo colocar una escalera de salida hacia el nivel siguiente -- por cualquiera de los
+    // motivos de PlaceLadderBetween (sin anchors, demasiado diagonal, o bloqueada por otra
+    // plataforma). Con el camino apuntando siempre a garantizar escalera (ver RuleManager.GeneratePath)
+    // esto deberia quedar vacio en una generacion sana; se expone igual como diagnostico.
+    private readonly HashSet<int> failedConnections = new HashSet<int>();
+
+    // Por cada conexion (misma clave 'level' que 'failedConnections'), el par de anchors mas
+    // vertical que se encontro -- aunque la escalera se haya terminado descartando por quedar
+    // demasiado diagonal o bloqueada. Diagnostico: permite inspeccionar el mejor candidato incluso
+    // en una conexion fallida.
+    private readonly Dictionary<int, (Transform lower, Transform upper)> connectorAnchorsByLevel =
+        new Dictionary<int, (Transform lower, Transform upper)>();
+
     void EnsureContainer()
     {
         if (ladderContainer != null) return;
@@ -89,25 +103,29 @@ public class LadderPlacer : MonoBehaviour
             if (!mainPathPlatforms.TryGetValue(nextLevel, out CylinderPlatformObj upperPlatform))
                 continue;
 
-            PlaceLadderBetween(mainPathPlatforms[level], upperPlatform, incomingAnchorUsed);
+            bool placed = PlaceLadderBetween(level, mainPathPlatforms[level], upperPlatform, incomingAnchorUsed);
+            if (!placed)
+                failedConnections.Add(level);
         }
     }
 
-    // Busca, entre TODOS los anchors LIBRES de la plataforma de abajo (la peticion nace ahi) y
-    // TODOS los anchors libres de la de arriba (el destino), el par que quede mas vertical
-    // posible. Un anchor "libre" es uno que ninguna plataforma extra encadenada ya esta tocando
-    // (ver 'occupiedAnchors'); ademas, el anchor de abajo no puede ser el mismo que ya reclamo la
-    // escalera de ENTRADA de esa plataforma (ver 'incomingAnchorUsed' / comentario en PlaceLadders).
-    // La peticion solo es valida si el mejor par encontrado queda dentro de 'maxTiltFromVertical'
-    // grados de la vertical pura (90 grados, sin angulo); si no hay ningun par de anchors libres,
-    // o el mas vertical de ellos sigue quedando demasiado diagonal, este tramo del camino se
-    // queda sin escalera de salida — intencional, aunque deje algunos niveles sin conexion (el
-    // hueco resultante debera cubrirlo el sistema de puzzle path mas adelante).
-    void PlaceLadderBetween(CylinderPlatformObj lowerPlatform, CylinderPlatformObj upperPlatform, Dictionary<CylinderPlatformObj, Transform> incomingAnchorUsed)
+    // Busca, entre los anchors de la plataforma de abajo (la peticion nace ahi) y los de la de
+    // arriba (el destino), el par que quede mas vertical posible. Cada CylinderPlatformObj ya
+    // devuelve el anchor EFECTIVO (ver CylinderPlatformObj.GetAnchorL/R): si tiene una cadena de
+    // extras encadenada de ese lado, es el extremo libre del ultimo eslabon, no el suyo propio
+    // (que esta tocado por la cadena) -- asi que aca no hace falta saber nada de eso. El anchor de
+    // abajo tampoco puede ser el mismo que ya reclamo la escalera de ENTRADA de esa plataforma (ver
+    // 'incomingAnchorUsed' / comentario en PlaceLadders). La peticion solo es valida si el mejor
+    // par encontrado queda dentro de 'maxTiltFromVertical' grados de la vertical pura (90 grados,
+    // sin angulo); si no hay ningun par de anchors, o el mas vertical de ellos sigue quedando
+    // demasiado diagonal, este tramo del camino se queda sin escalera de salida.
+    // Devuelve true si la escalera de salida de 'lowerPlatform' quedo colocada; false en
+    // cualquiera de los casos que dejan ese tramo sin escalera (ver los distintos 'return' de
+    // abajo), para que PlaceLadders() pueda registrarlo en 'failedConnections'.
+    bool PlaceLadderBetween(int level, CylinderPlatformObj lowerPlatform, CylinderPlatformObj upperPlatform, Dictionary<CylinderPlatformObj, Transform> incomingAnchorUsed)
     {
-        if (lowerPlatform == null || upperPlatform == null) return;
+        if (lowerPlatform == null || upperPlatform == null) return false;
 
-        HashSet<Transform> occupiedAnchors = cylinderRender.GetOccupiedAnchors();
         incomingAnchorUsed.TryGetValue(lowerPlatform, out Transform lowerIncomingAnchor);
 
         Transform[] lowerCandidates = { lowerPlatform.GetAnchorL(), lowerPlatform.GetAnchorR() };
@@ -121,13 +139,11 @@ public class LadderPlacer : MonoBehaviour
         foreach (Transform lowerAnchor in lowerCandidates)
         {
             if (lowerAnchor == null) continue;
-            if (occupiedAnchors != null && occupiedAnchors.Contains(lowerAnchor)) continue;
             if (lowerAnchor == lowerIncomingAnchor) continue;
 
             foreach (Transform upperAnchor in upperCandidates)
             {
                 if (upperAnchor == null) continue;
-                if (occupiedAnchors != null && occupiedAnchors.Contains(upperAnchor)) continue;
 
                 anyFreePair = true;
 
@@ -144,8 +160,12 @@ public class LadderPlacer : MonoBehaviour
         if (!anyFreePair)
         {
             debugChecks.Add(new DebugLineCheck { from = lowerPlatform.transform.position, to = upperPlatform.transform.position, result = DebugResult.NoFreeAnchorPair });
-            return;
+            return false;
         }
+
+        // Se guarda el mejor par libre encontrado ANTES de descartarlo por angulo/bloqueo, como
+        // diagnostico de que hubiera sido el candidato mas cercano aunque la conexion haya fallado.
+        connectorAnchorsByLevel[level] = (bestLower, bestUpper);
 
         // Regla: las escaleras deben quedar verticales (90 grados, sin ningun angulo). Aunque
         // 'bestLower'/'bestUpper' sea el par mas vertical entre los libres, si aun asi se pasa de
@@ -153,7 +173,7 @@ public class LadderPlacer : MonoBehaviour
         if (bestTilt > maxTiltFromVertical)
         {
             debugChecks.Add(new DebugLineCheck { from = bestLower.position, to = bestUpper.position, result = DebugResult.TooDiagonal });
-            return;
+            return false;
         }
 
         incomingAnchorUsed[upperPlatform] = bestUpper;
@@ -174,7 +194,7 @@ public class LadderPlacer : MonoBehaviour
         });
 
         if (blocked)
-            return;
+            return false;
 
         // La escalera "nace" en su destino: el pivote del prefab representa su extremo SUPERIOR,
         // asi que se coloca exactamente en el anchor libre de la plataforma de arriba (a donde
@@ -193,18 +213,49 @@ public class LadderPlacer : MonoBehaviour
         // Nota: por ahora no se escala la escalera para que coincida exactamente con la
         // distancia entre anchors (estirar el prefab vs. longitud fija es una decision de
         // reglas que se define junto con el resto del sistema de creacion del prefab).
+        return true;
     }
 
     // Elimina todas las escaleras generadas (para regenerar). Solo toca su propio contenedor,
-    // nunca "transform" directamente (compartido con CylinderRender).
+    // nunca "transform" directamente (compartido con CylinderRender). Tambien limpia el
+    // diagnostico ('failedConnections'/'connectorAnchorsByLevel') para no dejar datos de una
+    // generacion anterior si las escaleras se desactivan sin volver a llamar a PlaceLadders().
     public void ClearLadders()
     {
+        failedConnections.Clear();
+        connectorAnchorsByLevel.Clear();
+
         if (ladderContainer == null) return;
 
         for (int i = ladderContainer.childCount - 1; i >= 0; i--)
         {
             DestroyImmediate(ladderContainer.GetChild(i).gameObject);
         }
+    }
+
+    // Niveles (el inferior de cada conexion) sin escalera de salida hacia el nivel siguiente en la
+    // ultima generacion. Diagnostico: deberia quedar vacio salvo error de generacion.
+    public HashSet<int> GetLevelsWithoutLadder()
+    {
+        return failedConnections;
+    }
+
+    // Anchors mas cercanos a la vertical (uno de la plataforma de abajo, uno de la de arriba) que
+    // se encontraron para la conexion 'level' -> 'level+1', aunque no haya llegado a colocarse
+    // escalera ahi. Devuelve false si esa conexion nunca tuvo ni siquiera un par de anchors
+    // (NoFreeAnchorPair). Diagnostico.
+    public bool TryGetConnectorAnchors(int level, out Transform lowerAnchor, out Transform upperAnchor)
+    {
+        if (connectorAnchorsByLevel.TryGetValue(level, out (Transform lower, Transform upper) pair))
+        {
+            lowerAnchor = pair.lower;
+            upperAnchor = pair.upper;
+            return true;
+        }
+
+        lowerAnchor = null;
+        upperAnchor = null;
+        return false;
     }
 
     // Dibuja cada linea probada en la ultima generacion: verde si se coloco la escalera, rojo si
