@@ -56,10 +56,11 @@ public class RuleManager : MonoBehaviour
     // calcula usando los anchors L/R de cada prefab para que queden pegadas por sus bordes sin
     // superponerse, sea cual sea su tamaño o el radio del cilindro (ver GenerateTower).
 
-    [Header("Path - Trampas")]
-    [Range(0f, 1f)]
-    [Tooltip("Probabilidad de que una plataforma extra sea una Trampa en vez de Normal. Las trampas solo pueden aparecer en niveles intermedios cuyo nivel anterior Y siguiente del camino principal sean Normal (nunca pegadas a Spawn o Final)")]
-    public float trapChance = 0.25f;
+    // Las Trampas ya no son un roll de probabilidad por extra (ver GeneratePath): cada nivel
+    // "continua" (no Spawn, no reversal -- ver directionChangeChance) lleva EXACTAMENTE 1 Trampa
+    // entre sus extras, nunca en la ultima posicion de la cadena (esa es la que termina pidiendo
+    // la escalera de salida -- ver LadderPlacer). Spawn y los niveles de reversal se quedan sin
+    // Trampa (0 extras, igual que siempre).
 
     // Genera un camino continuo desde el nivel base hasta el nivel mas alto. En cada nivel
     // intermedio decide si el paso hacia el siguiente CONTINUA girando para el mismo lado o
@@ -177,10 +178,17 @@ public class RuleManager : MonoBehaviour
 
                     step = (centerStep + Random.Range(-continueJitter, continueJitter)) * direction;
 
-                    bool canBeTrap = level > 1 && level < totalLevels - 2;
+                    // Exactamente 1 Trampa por nivel "continua" (ver comentario de arriba), en
+                    // cualquier posicion salvo la ultima -- la principal del nivel ya esta tageada
+                    // "Normal", asi que incluso una Trampa en la primera posicion queda "entre 2
+                    // Normal" (la principal antes, un extra Normal real despues). extraCount es
+                    // siempre >= minExtraPlatformsPerLevel (2 por defecto) salvo en un nivel
+                    // endpoint, que ya vale 0 y no entra en este bloque -- el guard de abajo es
+                    // solo por si el usuario baja minExtraPlatformsPerLevel a 1 en el Inspector.
+                    int trapIndex = extraCount >= 2 ? Random.Range(0, extraCount - 1) : -1;
                     for (int e = 0; e < extraCount; e++)
                     {
-                        string extraTag = (canBeTrap && Random.value < trapChance) ? "Trampa" : "Normal";
+                        string extraTag = e == trapIndex ? "Trampa" : "Normal";
                         path.Add(new PathPlatform(level, extraTag, direction));
                     }
                 }

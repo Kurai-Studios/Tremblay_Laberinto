@@ -196,19 +196,58 @@ public class LadderPlacer : MonoBehaviour
         if (blocked)
             return false;
 
-        // La escalera "nace" en su destino: el pivote del prefab representa su extremo SUPERIOR,
-        // asi que se coloca exactamente en el anchor libre de la plataforma de arriba (a donde
-        // llega el jugador subiendo) y se orienta para bajar desde ahi hacia el anchor de la
-        // plataforma de abajo. Se asume que el prefab esta modelado con su eje local +Y apuntando
-        // "hacia arriba" de la escalera (convencion estandar de Unity); FromToRotation alinea ese
-        // eje con la direccion real de bajada (de arriba hacia abajo) para que quede colgando
-        // hacia la plataforma inferior en vez de flotando en el punto medio con rotacion por defecto.
-        GameObject ladderInstance = Instantiate(ladderPrefab, ladderContainer);
-        ladderInstance.transform.position = top;
+        // Regla: si la escalera termino conectando el mismo lado (L con L, o R con R) en vez del
+        // caso habitual (un anchor L con un R), se agrega una plataforma extra pegada a ese mismo
+        // anchor de la plataforma de ABAJO (el nivel que "pidio" la escalera) -- puramente de
+        // relleno, no afecta la escalera recien colocada ni ninguna otra.
+        if (bestLower == lowerPlatform.GetAnchorL() && bestUpper == upperPlatform.GetAnchorL())
+            cylinderRender.SpawnExtraBesideAnchor(lowerPlatform, true);
+        else if (bestLower == lowerPlatform.GetAnchorR() && bestUpper == upperPlatform.GetAnchorR())
+            cylinderRender.SpawnExtraBesideAnchor(lowerPlatform, false);
 
-        Vector3 downDirection = bottom - top;
-        if (downDirection.sqrMagnitude > 0.0001f)
-            ladderInstance.transform.rotation = Quaternion.FromToRotation(Vector3.up, downDirection.normalized);
+        // La escalera "nace" en su destino: se orienta para que su cuerpo cuelgue desde el Top
+        // Anchor hacia abajo, y despues se traslada entera para que ese Top Anchor (ver
+        // LadderConnector, asignado a mano en el prefab -- no se asume que el pivote raiz del mesh
+        // sea ese punto) quede exactamente sobre el anchor libre de la plataforma de arriba, a
+        // donde llega el jugador subiendo. El prefab esta modelado con su eje local +Y apuntando
+        // desde la base del modelo HACIA el Top Anchor (confirmado empiricamente: con el prefab
+        // sin rotar, el Top Anchor tiene Y local positivo respecto del pivote) -- por eso ese eje
+        // debe alinearse con la direccion real de SUBIDA (de abajo hacia arriba), no de bajada:
+        // alinearlo con la bajada (como se hizo en un intento anterior) deja el cuerpo de la
+        // escalera flotando arriba del Top Anchor en vez de colgando hacia la plataforma inferior.
+        //
+        // FromToRotation solo fija ese eje Y: deja un "giro" (roll) arbitrario alrededor suyo, asi
+        // que la cara ANCHA del prefab (medida por bounds: ~0.09 de espesor en Z local contra ~1.07
+        // y ~2.77 en X/Y -- el eje local +Z es la normal de esa cara ancha) terminaba apuntando en
+        // cualquier direccion, a veces derecho hacia el cilindro. Se usa LookRotation en su lugar
+        // para fijar tambien ese giro: el forward (+Z, la normal de la cara ancha) se fija a la
+        // direccion TANGENCIAL (perpendicular al radio, "a lo largo" de la curva del cilindro en
+        // ese punto -- Cross(up, radial)), NO a la direccion radial -- la cara ancha no debe
+        // apuntar ni hacia adentro ni hacia afuera del cilindro, sino de costado. El upwards sigue
+        // siendo la direccion real de subida (LookRotation ortogonaliza el upwards contra el
+        // forward, asi que el eje Y de subida queda correcto igual).
+        GameObject ladderInstance = Instantiate(ladderPrefab, ladderContainer);
+        ladderInstance.transform.localPosition = Vector3.zero;
+
+        Vector3 upDirection = top - bottom;
+        Vector3 radialDirection = (top + bottom) * 0.5f;
+        radialDirection.y = 0f;
+        Vector3 tangentDirection = Vector3.Cross(Vector3.up, radialDirection);
+
+        if (tangentDirection.sqrMagnitude > 0.0001f && upDirection.sqrMagnitude > 0.0001f)
+            ladderInstance.transform.rotation = Quaternion.LookRotation(tangentDirection.normalized, upDirection.normalized);
+        else if (upDirection.sqrMagnitude > 0.0001f)
+            ladderInstance.transform.rotation = Quaternion.FromToRotation(Vector3.up, upDirection.normalized);
+
+        // Alinear el Top Anchor real (ya rotado) con el punto de destino, en vez de asumir que el
+        // pivote raiz del prefab es ese punto. Sin LadderConnector (prefab viejo/sin configurar),
+        // cae de vuelta al comportamiento anterior: el propio pivote raiz se usa como "top".
+        LadderConnector connector = ladderInstance.GetComponent<LadderConnector>();
+        Transform topAnchor = connector != null ? connector.GetTopAnchor() : null;
+        if (topAnchor != null)
+            ladderInstance.transform.position += top - topAnchor.position;
+        else
+            ladderInstance.transform.position = top;
 
         // Nota: por ahora no se escala la escalera para que coincida exactamente con la
         // distancia entre anchors (estirar el prefab vs. longitud fija es una decision de

@@ -63,6 +63,14 @@ public class CylinderRender : MonoBehaviour
     // extras del mismo nivel no cuentan). LadderPlacer la usa para conectar niveles consecutivos.
     private Dictionary<int, CylinderPlatformObj> mainPathPlatforms = new Dictionary<int, CylinderPlatformObj>();
 
+    // Geometria de la generacion en curso (radio, altura de nivel, posicion base), cacheada para
+    // que SpawnExtraBesideAnchor pueda instanciar una plataforma nueva con la misma formula que el
+    // resto del camino. LadderPlacer.PlaceLadders() corre DENTRO de este mismo GenerateTower(), asi
+    // que estos valores siguen siendo validos cuando lo llama.
+    private float lastCylinderRadius;
+    private float lastLevelHeight;
+    private Vector3 lastBasePosition;
+
     private void Start()
     {
         GenerateTower();
@@ -114,6 +122,10 @@ public class CylinderRender : MonoBehaviour
         int totalLevels = platformGen.GetTotalLevels();
 
         Vector3 basePosition = platformGen.GetPlatformBasePosition();
+
+        lastCylinderRadius = cylinderRadiusValue;
+        lastLevelHeight = platformGen.levelHeight;
+        lastBasePosition = basePosition;
 
         //Debug.Log($"Renderizando plataformas desde: {basePosition}");
         //Debug.Log($"Radio del cilindro: {cylinderRadiusValue}");
@@ -395,6 +407,48 @@ public class CylinderRender : MonoBehaviour
     public Dictionary<int, CylinderPlatformObj> GetMainPathPlatforms()
     {
         return mainPathPlatforms;
+    }
+
+    // Instancia una plataforma "Normal" extra, pegada por su borde al anchor L o R indicado de
+    // 'ownerPlatform', extendiendose mas hacia afuera en la misma direccion en la que ese anchor ya
+    // se aleja del centro de la plataforma (misma convencion L/R que FinalizeChain: L = angulo
+    // creciente, R = angulo decreciente). Usada por LadderPlacer cuando una escalera termina
+    // conectando el mismo lado (L-L) en ambas plataformas: agrega una plataforma de relleno junto a
+    // esa conexion, en el nivel que "pidio" la escalera (el de abajo). Es puramente una plataforma
+    // mas del nivel -- no se integra al sistema de anchor efectivo (SetEffectiveAnchorL/R), asi que
+    // no cambia a que anchor apunta ninguna escalera existente ni futura.
+    public void SpawnExtraBesideAnchor(CylinderPlatformObj ownerPlatform, bool useLeftAnchor)
+    {
+        if (ownerPlatform == null) return;
+
+        GameObject normalPrefab = GetPrefabByTag("Normal");
+        if (normalPrefab == null) return;
+
+        CylinderPlatformObj normalPrefabData = normalPrefab.GetComponent<CylinderPlatformObj>();
+        if (normalPrefabData == null) return;
+
+        TowerPlatform ownerData = ownerPlatform.GetPlatformData();
+        if (ownerData == null) return;
+
+        float ownerHalfWidthAngle = HalfWidthToAngle(ownerPlatform.GetTangentialHalfWidth() * platformScale, lastCylinderRadius);
+        float extraHalfWidthAngle = HalfWidthToAngle(normalPrefabData.GetTangentialHalfWidth() * platformScale, lastCylinderRadius);
+
+        float direction = useLeftAnchor ? 1f : -1f;
+        float finalAngle = NormalizeAngle(ownerData.angle + (ownerHalfWidthAngle + extraHalfWidthAngle) * direction);
+
+        GameObject extraInstance = Instantiate(normalPrefab, transform);
+        extraInstance.transform.localScale = Vector3.one * platformScale;
+
+        CylinderPlatformObj extraCell = extraInstance.GetComponent<CylinderPlatformObj>();
+        if (extraCell == null) return;
+
+        TowerPlatform extraData = new TowerPlatform(ownerData.level, finalAngle);
+        extraCell.Init(extraData, lastCylinderRadius, lastLevelHeight, lastBasePosition);
+
+        // Recien reposicionada: sincronizar fisica para que cualquier raycast posterior (blocking
+        // checks de otras escaleras, gizmos, etc.) vea su collider en la posicion correcta (ver el
+        // mismo Physics.SyncTransforms() al final de GenerateTower).
+        Physics.SyncTransforms();
     }
 
     // Aplica un material a todos los renderers del cilindro instanciado (el propio objeto y sus hijos)
