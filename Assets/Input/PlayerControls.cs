@@ -20,7 +20,8 @@ public partial class PlayerControls : IInputActionCollection2, IDisposable
                 { ""name"": ""Look"", ""type"": ""Value"", ""id"": ""a1b2c3d4-0002-0002-0001-000000000001"", ""expectedControlType"": ""Vector2"" },
                 { ""name"": ""Jump"", ""type"": ""Button"", ""id"": ""a1b2c3d4-0002-0003-0001-000000000001"" },
                 { ""name"": ""Sprint"", ""type"": ""Button"", ""id"": ""a1b2c3d4-0002-0004-0001-000000000001"" },
-                { ""name"": ""Crouch"", ""type"": ""Button"", ""id"": ""a1b2c3d4-0002-0005-0001-000000000001"" }
+                { ""name"": ""Crouch"", ""type"": ""Button"", ""id"": ""a1b2c3d4-0002-0005-0001-000000000001"" },
+                { ""name"": ""Interact"", ""type"": ""Button"", ""id"": ""a1b2c3d4-0002-0008-0001-000000000001"" }
             ],
             ""bindings"": [
                 { ""name"": ""WASD"", ""id"": ""b1-01"", ""path"": ""2DVector"", ""action"": ""Move"", ""isComposite"": true },
@@ -31,7 +32,8 @@ public partial class PlayerControls : IInputActionCollection2, IDisposable
                 { ""name"": """", ""id"": ""b1-06"", ""path"": ""<Mouse>/delta"",       ""action"": ""Look"" },
                 { ""name"": """", ""id"": ""b1-07"", ""path"": ""<Keyboard>/space"",     ""action"": ""Jump"" },
                 { ""name"": """", ""id"": ""b1-08"", ""path"": ""<Keyboard>/leftShift"", ""action"": ""Sprint"" },
-                { ""name"": """", ""id"": ""b1-09"", ""path"": ""<Keyboard>/leftCtrl"",  ""action"": ""Crouch"" }
+                { ""name"": """", ""id"": ""b1-09"", ""path"": ""<Keyboard>/leftCtrl"",  ""action"": ""Crouch"" },
+                { ""name"": """", ""id"": ""b1-10"", ""path"": ""<Keyboard>/e"",         ""action"": ""Interact"" }
             ]
         }
     ],
@@ -98,11 +100,12 @@ public partial class PlayerControls : IInputActionCollection2, IDisposable
 
         internal PlayerActions(PlayerControls wrapper) { m_Wrapper = wrapper; }
 
-        public InputAction Move   => m_Wrapper.asset.FindAction("Player/Move",   false);
-        public InputAction Look   => m_Wrapper.asset.FindAction("Player/Look",   false);
-        public InputAction Jump   => m_Wrapper.asset.FindAction("Player/Jump",   false);
-        public InputAction Sprint => m_Wrapper.asset.FindAction("Player/Sprint", false);
-        public InputAction Crouch => m_Wrapper.asset.FindAction("Player/Crouch", false);
+        public InputAction Move     => m_Wrapper.asset.FindAction("Player/Move",     false);
+        public InputAction Look     => m_Wrapper.asset.FindAction("Player/Look",     false);
+        public InputAction Jump     => m_Wrapper.asset.FindAction("Player/Jump",     false);
+        public InputAction Sprint   => m_Wrapper.asset.FindAction("Player/Sprint",   false);
+        public InputAction Crouch   => m_Wrapper.asset.FindAction("Player/Crouch",   false);
+        public InputAction Interact => m_Wrapper.asset.FindAction("Player/Interact", false);
 
         public InputActionMap Get() => m_Wrapper.asset.FindActionMap("Player", false);
         public void Enable()  => Get().Enable();
@@ -132,6 +135,10 @@ public partial class PlayerControls : IInputActionCollection2, IDisposable
             Crouch.started   += instance.OnCrouch;
             Crouch.performed += instance.OnCrouch;
             Crouch.canceled  += instance.OnCrouch;
+
+            Interact.started   += instance.OnInteract;
+            Interact.performed += instance.OnInteract;
+            Interact.canceled  += instance.OnInteract;
         }
 
         public void RemoveCallbacks(IPlayerActions instance)
@@ -158,6 +165,10 @@ public partial class PlayerControls : IInputActionCollection2, IDisposable
             Crouch.started   -= instance.OnCrouch;
             Crouch.performed -= instance.OnCrouch;
             Crouch.canceled  -= instance.OnCrouch;
+
+            Interact.started   -= instance.OnInteract;
+            Interact.performed -= instance.OnInteract;
+            Interact.canceled  -= instance.OnInteract;
         }
     }
 
@@ -168,5 +179,6 @@ public partial class PlayerControls : IInputActionCollection2, IDisposable
         void OnJump(InputAction.CallbackContext context);
         void OnSprint(InputAction.CallbackContext context);
         void OnCrouch(InputAction.CallbackContext context);
+        void OnInteract(InputAction.CallbackContext context);
     }
 }

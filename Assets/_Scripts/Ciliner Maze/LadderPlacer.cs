@@ -249,6 +249,15 @@ public class LadderPlacer : MonoBehaviour
         else
             ladderInstance.transform.position = top;
 
+        // El punto real de la plataforma de destino ya se conoce aca ('top', el anchor exacto de
+        // upperPlatform) -- se lo pasamos a la propia escalera para que su salida por arriba
+        // (LadderController.Tick) aterrice ahi en vez de adivinar con un offset fijo. Un offset
+        // constante no puede ser correcto para todas las escaleras, ya que la distancia real entre
+        // el tope de la escalera y su plataforma varia segun la conexion.
+        LadderZone ladderZone = ladderInstance.GetComponent<LadderZone>();
+        if (ladderZone != null)
+            ladderZone.SetTopExitTarget(top);
+
         // Nota: por ahora no se escala la escalera para que coincida exactamente con la
         // distancia entre anchors (estirar el prefab vs. longitud fija es una decision de
         // reglas que se define junto con el resto del sistema de creacion del prefab).

@@ -32,4 +32,4 @@ MonoBehaviour:
   standingCenterY: 0.75
   slopeSlideSpeed: 5
   ladderClimbSpeed: 1
-  ladderFacingOffset: 180
+  ladderFacingOffset: 0
