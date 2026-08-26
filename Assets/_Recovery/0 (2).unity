@@ -2203,9 +2203,8 @@ GameObject:
   - component: {fileID: 607208734}
   - component: {fileID: 607208736}
   - component: {fileID: 607208737}
-  - component: {fileID: 607208738}
   m_Layer: 0
-  m_Name: CylinderMazeManager
+  m_Name: CylinderPlatTester
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2227,7 +2226,11 @@ MonoBehaviour:
   maxPlatformsPerLevel: 5
   levelHeight: 4
   minAngleSeparation: 30
-  cylinderPrefab: {fileID: 2855397460134390941, guid: ad82f64fb30e68a41b89ec47e2d3326e, type: 3}
+  cylinderPrefabs:
+  - {fileID: 2855397460134390941, guid: ad82f64fb30e68a41b89ec47e2d3326e, type: 3}
+  - {fileID: 2855397460134390941, guid: 8b7f85b84b97dd047a3ec4d70d5ea3da, type: 3}
+  - {fileID: 2855397460134390941, guid: ab2c41c53f34c1148a452895c8db2e30, type: 3}
+  - {fileID: 2855397460134390941, guid: 3c265beedc0789947b668011adff1148, type: 3}
 --- !u!4 &607208735
 Transform:
   m_ObjectHideFlags: 0
@@ -2256,23 +2259,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CylinderRender
   platformGen: {fileID: 607208734}
-  ruleManager: {fileID: 607208737}
-  ladderPlacer: {fileID: 607208738}
   platformPrefabs:
   - {fileID: 5721999424188059987, guid: a6184de758ffd7e4c9244a366177289c, type: 3}
   - {fileID: 5721999424188059987, guid: 1697ee733ad02714698ced087f190d93, type: 3}
   - {fileID: 5721999424188059987, guid: 710f7597537c74e4daa5389d613d8c0b, type: 3}
   - {fileID: 5721999424188059987, guid: e9afa01f168a11c409fc2912a2a07057, type: 3}
   platformScale: 4
-  enableLadders: 1
   overrideCylinderDimensions: 1
   cylinderRadius: 6
   cylinderHeight: 40
-  cylinderMaterials:
-  - {fileID: -6478536213147159724, guid: 1011a23eaf5d70447a39ff4f1e08397c, type: 3}
-  - {fileID: -3846018093981099296, guid: 1011a23eaf5d70447a39ff4f1e08397c, type: 3}
-  - {fileID: 4874126678125670354, guid: 1011a23eaf5d70447a39ff4f1e08397c, type: 3}
-  - {fileID: -6922793697723135513, guid: 1011a23eaf5d70447a39ff4f1e08397c, type: 3}
 --- !u!114 &607208737
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2280,33 +2275,17 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 607208733}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d3d51d2ac8c9cde4999a3f15d37e1b8a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RuleManager
-  minStepAngle: 20
-  maxStepAngle: 100
-  directionChangeChance: 0.3
-  minExtraPlatformsPerLevel: 2
-  maxExtraPlatformsPerLevel: 3
---- !u!114 &607208738
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 607208733}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5e9f25435d030bc40a2d8bef09d2c005, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::LadderPlacer
-  cylinderRender: {fileID: 607208736}
-  ladderPrefab: {fileID: 8978938229178587651, guid: 7219b2549c433084da86677e7a1f9bcb, type: 3}
-  mainPathTag: MainPath
-  maxTiltFromVertical: 5
-  showDebugRays: 1
+  placementRules:
+  - {fileID: 11400000, guid: 2c7c60293f7892a45b81ffaa6f72cac2, type: 2}
+  - {fileID: 11400000, guid: 2bd8e95b97a977d489dea656a388f4ba, type: 2}
+  - {fileID: 11400000, guid: 9e997d6d5185f3841b09eaf7b4dba200, type: 2}
+  cylinderRadius: 5
+  levelHeight: 3
 --- !u!1 &640958389
 GameObject:
   m_ObjectHideFlags: 0

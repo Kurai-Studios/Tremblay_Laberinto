@@ -2264,7 +2264,6 @@ MonoBehaviour:
   - {fileID: 5721999424188059987, guid: 710f7597537c74e4daa5389d613d8c0b, type: 3}
   - {fileID: 5721999424188059987, guid: e9afa01f168a11c409fc2912a2a07057, type: 3}
   platformScale: 4
-  enableLadders: 1
   overrideCylinderDimensions: 1
   cylinderRadius: 6
   cylinderHeight: 40
@@ -2287,9 +2286,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RuleManager
   minStepAngle: 20
   maxStepAngle: 100
-  directionChangeChance: 0.3
-  minExtraPlatformsPerLevel: 2
+  directionChangeChance: 0.5
+  minExtraPlatformsPerLevel: 1
   maxExtraPlatformsPerLevel: 3
+  extraPlatformSpacing: 25
 --- !u!114 &607208738
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2304,9 +2304,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::LadderPlacer
   cylinderRender: {fileID: 607208736}
   ladderPrefab: {fileID: 8978938229178587651, guid: 7219b2549c433084da86677e7a1f9bcb, type: 3}
-  mainPathTag: MainPath
-  maxTiltFromVertical: 5
-  showDebugRays: 1
 --- !u!1 &640958389
 GameObject:
   m_ObjectHideFlags: 0

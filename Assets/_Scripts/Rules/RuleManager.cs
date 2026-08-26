@@ -1,232 +1,228 @@
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
+
+// Datos de una plataforma del camino: en que nivel, a que angulo y con que tag debe colocarse.
+// Las plataformas principales traen su angulo final ya calculado (random walk). Las extras
+// encadenadas (isChained = true) no traen angulo: CylinderRender lo calcula en el momento de
+// instanciar, usando los anchors L/R de la plataforma anterior y la nueva para que queden
+// pegadas por sus bordes sin superponerse (ver CylinderRender.GenerateTower).
+[System.Serializable]
+public struct PathPlatform
+{
+    public int level;
+    public float angle;
+    public string tag;
+    public bool isChained;
+    public float chainDirection;
+
+    // Plataforma principal: angulo final ya definido, no encadenada
+    public PathPlatform(int level, float angle, string tag)
+    {
+        this.level = level;
+        this.angle = angle;
+        this.tag = tag;
+        this.isChained = false;
+        this.chainDirection = 1f;
+    }
+
+    // Plataforma extra encadenada: sin angulo propio, CylinderRender lo calcula via anchors
+    public PathPlatform(int level, string tag, float chainDirection)
+    {
+        this.level = level;
+        this.angle = 0f;
+        this.tag = tag;
+        this.isChained = true;
+        this.chainDirection = chainDirection;
+    }
+}
 
 public class RuleManager : MonoBehaviour
 {
-    [Header("Reglas de Colocacion")]
-    [Tooltip("Array de reglas que se aplicaran durante la generacion")]
-    public PlacementRule[] placementRules;
+    [Header("Path - Random Walk")]
+    [Tooltip("Cuanto puede variar el paso (en grados) alrededor del angulo que alinea los anchors L/R de dos niveles consecutivos (ver GeneratePath), para que el espiral no sea perfectamente uniforme. La geometria de la escalera manda si es mas estricta: el jitter real queda acotado por la tolerancia de inclinacion de LadderPlacer")]
+    public float minStepAngle = 20f;
+    [Tooltip("Ver minStepAngle: junto con el forman el rango de variacion del paso alrededor del angulo que alinea anchors")]
+    public float maxStepAngle = 100f;
+    [Range(0f, 1f)]
+    [Tooltip("Probabilidad de que el camino cambie de sentido (horario/antihorario) en cada nivel intermedio, en vez de seguir girando siempre para el mismo lado. Nunca deja el tramo sin escalera (ver GeneratePath): un cambio de sentido usa un paso CHICO en vez de saltar a un angulo arbitrario, para seguir enganchando un anchor real y cercano a la vertical. Los niveles con cambio de sentido no llevan plataformas extra encadenadas (ver comentario grande de GeneratePath)")]
+    public float directionChangeChance = 0.3f;
 
-    [Header("Configuracion de Cilindro")]
-    public float cylinderRadius = 5f;
-    public float levelHeight = 3f;
+    [Header("Path - Plataformas Extra")]
+    [Tooltip("Cantidad minima de plataformas extra (ademas de la principal) en cada nivel intermedio que 'continua' girando para el mismo lado (ver directionChangeChance). Se encadenan por anchors al anchor de SALIDA de la principal -- igual que al principio de la sesion -- y el paso al siguiente nivel se alarga automaticamente para compensar el ancho agregado, asi que la escalera de salida sigue enganchando el anchor libre del ULTIMO eslabon de la cadena")]
+    public int minExtraPlatformsPerLevel = 2;
+    [Tooltip("Cantidad maxima de plataformas extra (ademas de la principal) en un nivel que 'continua'. Junto con minExtraPlatformsPerLevel definen el total de plataformas por nivel (principal + extras)")]
+    public int maxExtraPlatformsPerLevel = 3;
+    // La separacion angular entre plataformas extra ya no es un valor fijo: CylinderRender la
+    // calcula usando los anchors L/R de cada prefab para que queden pegadas por sus bordes sin
+    // superponerse, sea cual sea su tamaño o el radio del cilindro (ver GenerateTower).
 
-    // Lista de plataformas ya colocadas (para verificar reglas)
-    private List<PlatformData> placedPlatforms = new List<PlatformData>();
+    // Las Trampas ya no son un roll de probabilidad por extra (ver GeneratePath): cada nivel
+    // "continua" (no Spawn, no reversal -- ver directionChangeChance) lleva EXACTAMENTE 1 Trampa
+    // entre sus extras, nunca en la ultima posicion de la cadena (esa es la que termina pidiendo
+    // la escalera de salida -- ver LadderPlacer). Spawn y los niveles de reversal se quedan sin
+    // Trampa (0 extras, igual que siempre).
 
-    // Estadisticas de reglas
-    private Dictionary<string, int> rulePassCount = new Dictionary<string, int>();
-    private Dictionary<string, int> ruleFailCount = new Dictionary<string, int>();
-
-    // Verifica si una plataforma puede ser colocada en la posicion dada
-    // Revisa TODAS las reglas activas
-    public bool CanPlacePlatform(GameObject prefab, int level, int index, TowerPlatform[,] allPlatforms)
+    // Genera un camino continuo desde el nivel base hasta el nivel mas alto. En cada nivel
+    // intermedio decide si el paso hacia el siguiente CONTINUA girando para el mismo lado o
+    // CAMBIA de sentido (ver 'directionChangeChance'); en ambos casos apunta a un angulo que deja
+    // una escalera real y casi vertical -- las escaleras son la UNICA forma de subir el camino
+    // principal, asi que ninguna conexion puede quedar sin apuntar a una.
+    //
+    // 'radius', 'levelHeight' y 'maxLadderTiltAngle' definen la geometria de la escalera.
+    // 'connectorHalfWidthAngle' es el angulo (grados) que ocupa, desde el centro de una
+    // plataforma principal hasta su anchor L/R, a ese radio (ver CylinderRender.HalfWidthToAngle).
+    //
+    // LadderPlacer no conecta los centros de dos plataformas principales: conecta el anchor de
+    // cada una mas cercano a la otra, y NUNCA reutiliza para la escalera de SALIDA el mismo anchor
+    // que ya uso la escalera de ENTRADA de esa plataforma (si no, quedaria una escalera literalmente
+    // arriba de otra: el jugador sube y sigue subiendo sin caminar nada). Por eso el paso que se
+    // apunta depende de si se continua o se cambia de sentido:
+    //
+    // - CONTINUAR (mismo sentido que el paso de entrada): el paso que alinea el anchor de "salida"
+    //   de la plataforma de abajo con el anchor de "entrada" de la de arriba es 2 * connectorHalfWidthAngle
+    //   (ver 'ladderStepCenter'). Este paso usa el anchor OPUESTO al de entrada automaticamente
+    //   (geometria del anchor L/R), asi que nunca choca con el de 'lowerIncomingAnchor'. Ademas, en
+    //   este caso se encadenan 'minExtraPlatformsPerLevel'..'maxExtraPlatformsPerLevel' plataformas
+    //   extra desde ESE MISMO anchor de salida (como al principio de la sesion, pegadas por sus
+    //   bordes), y CylinderRender redirige el anchor efectivo de salida de la principal al extremo
+    //   libre del ultimo eslabon (ver CylinderPlatformObj.SetEffectiveAnchorL/R) -- por eso el paso
+    //   se alarga con el ancho total de la cadena (ver 'chainedOffset' abajo), para que la escalera
+    //   siga apuntando al anchor real donde queda el extremo libre.
+    //
+    // - CAMBIAR DE SENTIDO: si se apuntara al mismo 'ladderStepCenter' pero invertido, la escalera
+    //   de salida terminaria pegada al MISMO anchor que la de entrada (misma "conexion cerrada",
+    //   rompiendo el maze). Pero un paso CHICO (bien menor a 'ladderStepCenter') en el sentido
+    //   invertido hace que el par de anchors mas cercano a la vertical pase a ser el mismo LADO en
+    //   ambas plataformas (p. ej. anchor R de la de abajo con anchor R de la de arriba) en vez del
+    //   lado opuesto -- y ese lado NO es el que uso la escalera de entrada, asi que sigue siendo un
+    //   anchor libre. La distancia angular entre esos dos anchors del mismo lado es exactamente la
+    //   magnitud del paso chico, asi que mientras se mantenga acotada por la tolerancia de
+    //   inclinacion de la escalera (igual que el jitter de 'continuar'), la conexion sigue siendo
+    //   casi vertical y valida. Ese margen es demasiado chico para sumarle encima el ancho de una
+    //   cadena de extras sin salirse de la tolerancia, asi que estos niveles no llevan extras: se
+    //   quedan solo con su plataforma principal.
+    public List<PathPlatform> GeneratePath(int totalLevels, float radius, float levelHeight, float maxLadderTiltAngle, float connectorHalfWidthAngle)
     {
-        if (placementRules == null || placementRules.Length == 0)
-        {
-            Debug.Log("Sin reglas: plataforma permitida");
-            return true;
-        }
+        List<PathPlatform> path = new List<PathPlatform>();
 
-        // Inicializar estadisticas si es necesario
-        if (rulePassCount.Count == 0)
+        if (totalLevels <= 0) return path;
+
+        float ladderStepCenter = connectorHalfWidthAngle * 2f;
+        float ladderTolerance = MaxStepAngleForTilt(radius, levelHeight, maxLadderTiltAngle);
+
+        // Margen de seguridad: la formula de tolerancia asume que el anchor conector queda
+        // exactamente al radio del cilindro, pero en realidad queda un poco mas lejos del eje
+        // (offset tangencial => hipotenusa levemente mayor a 'radius'). Se recorta un 15% para
+        // asegurar margen real, no solo el limite teorico (mismo motivo en ambos casos de abajo).
+        const float toleranceSafetyFactor = 0.85f;
+        float safeTolerance = ladderTolerance * toleranceSafetyFactor;
+
+        // "Continuar": jitter alrededor del paso central (ladderStepCenter + ancho de cadena, ver
+        // abajo), acotado por minStepAngle/maxStepAngle (variedad visual) y por la tolerancia real
+        // de la escalera (lo que manda si es mas estricto).
+        float userSpread = Mathf.Max(0f, (maxStepAngle - minStepAngle) / 2f);
+        float continueJitter = Mathf.Min(userSpread, safeTolerance);
+
+        // "Cambiar de sentido": paso chico (no ladderStepCenter) en el sentido invertido -- ver
+        // comentario grande de arriba sobre por que esto es lo que evita reusar el mismo anchor.
+        // Se deja un minimo chico (30% del maximo) para que el cambio de sentido sea visualmente
+        // perceptible incluso cuando la tolerancia es muy ajustada.
+        float reversalStepMax = Mathf.Max(0.5f, safeTolerance);
+        float reversalStepMin = reversalStepMax * 0.3f;
+
+        float currentAngle = Random.Range(0f, 360f);
+        float direction = Random.value < 0.5f ? 1f : -1f;
+
+        for (int level = 0; level < totalLevels; level++)
         {
-            foreach (var rule in placementRules)
+            string tag = GetTagForLevel(level, totalLevels);
+            float mainAngle = currentAngle;
+
+            path.Add(new PathPlatform(level, mainAngle, tag));
+
+            bool isEndpoint = level == 0 || level == totalLevels - 1;
+            bool hasNextLevel = level < totalLevels - 1;
+
+            if (hasNextLevel)
             {
-                if (rule != null && !string.IsNullOrEmpty(rule.ruleName))
+                // El tramo Spawn->nivel1 y el que llega al Final se fuerzan siempre "continuar":
+                // son los unicos puntos de entrada/salida garantizados del camino (ver tambien el
+                // relleno de anillo de Spawn en CylinderRender), asi que se mantienen simples.
+                bool mustGuaranteeLadder = level == 0 || level == totalLevels - 2;
+                bool isDirectionChange = !mustGuaranteeLadder && Random.value < directionChangeChance;
+
+                float step;
+                if (isDirectionChange)
                 {
-                    rulePassCount[rule.ruleName] = 0;
-                    ruleFailCount[rule.ruleName] = 0;
+                    direction *= -1f;
+                    float magnitude = Random.Range(reversalStepMin, reversalStepMax);
+                    step = magnitude * direction;
                 }
+                else
+                {
+                    // Cantidad de extras para ESTE nivel, encadenadas desde el anchor de salida.
+                    // 'chainedOffset' es el angulo (desde el CENTRO de la principal) al extremo
+                    // libre del ultimo eslabon: cada eslabon agrega 2*connectorHalfWidthAngle (su
+                    // propio medio-ancho mas el de la plataforma a la que se pega, asumiendo que
+                    // todos los prefabs comparten el mismo offset de anchor -- ver
+                    // CylinderRender.GetConnectorHalfWidthAngle), y el propio anchor de la
+                    // principal ya aporta el primer 'connectorHalfWidthAngle'. Con 0 extras
+                    // (chainedOffset = connectorHalfWidthAngle) esto colapsa exactamente al caso
+                    // sin cadena de siempre.
+                    int extraCount = isEndpoint ? 0 : Random.Range(minExtraPlatformsPerLevel, maxExtraPlatformsPerLevel + 1);
+                    float chainedOffset = (2 * extraCount + 1) * connectorHalfWidthAngle;
+
+                    // El nivel siguiente siempre recibe la escalera en su anchor propio (nunca
+                    // encadenado): el paso central es la suma de ambos offsets.
+                    float centerStep = chainedOffset + connectorHalfWidthAngle;
+
+                    step = (centerStep + Random.Range(-continueJitter, continueJitter)) * direction;
+
+                    // Exactamente 1 Trampa por nivel "continua" (ver comentario de arriba), en
+                    // cualquier posicion salvo la ultima -- la principal del nivel ya esta tageada
+                    // "Normal", asi que incluso una Trampa en la primera posicion queda "entre 2
+                    // Normal" (la principal antes, un extra Normal real despues). extraCount es
+                    // siempre >= minExtraPlatformsPerLevel (2 por defecto) salvo en un nivel
+                    // endpoint, que ya vale 0 y no entra en este bloque -- el guard de abajo es
+                    // solo por si el usuario baja minExtraPlatformsPerLevel a 1 en el Inspector.
+                    int trapIndex = extraCount >= 2 ? Random.Range(0, extraCount - 1) : -1;
+                    for (int e = 0; e < extraCount; e++)
+                    {
+                        string extraTag = e == trapIndex ? "Trampa" : "Normal";
+                        path.Add(new PathPlatform(level, extraTag, direction));
+                    }
+                }
+
+                currentAngle = NormalizeAngle(currentAngle + step);
             }
         }
 
-        // Verificar cada regla
-        foreach (var rule in placementRules)
-        {
-            // Saltar reglas nulas o inactivas
-            if (rule == null)
-            {
-                Debug.LogWarning("Regla nula encontrada en el array");
-                continue;
-            }
-
-            if (!rule.isActive)
-            {
-                Debug.Log($"Regla '{rule.ruleName}' inactiva, saltando");
-                continue;
-            }
-
-            // Actualizar el radio del cilindro en la regla (si es del tipo que lo usa)
-            if (rule is MustBeNearPlatform nearRule)
-            {
-                nearRule.cylinderRadius = cylinderRadius;
-            }
-            /*else if (rule is CannotBeNearPlatform cannotRule)
-            {
-                cannotRule.cylinderRadius = cylinderRadius;
-            }*/
-
-            // Verificar la regla
-            bool canPlace = rule.CanPlace(prefab, level, index, placedPlatforms, allPlatforms);
-
-            // Actualizar estadisticas
-            if (canPlace)
-            {
-                rulePassCount[rule.ruleName] = rulePassCount.ContainsKey(rule.ruleName) ?
-                                               rulePassCount[rule.ruleName] + 1 : 1;
-
-                Debug.Log($"Regla '{rule.ruleName}' APROBADA para {prefab?.name ?? "null"} " + $"en nivel {level}, índice {index}");
-                
-            }
-            else
-            {
-                ruleFailCount[rule.ruleName] = ruleFailCount.ContainsKey(rule.ruleName) ?
-                                               ruleFailCount[rule.ruleName] + 1 : 1;
-
-                
-                Debug.Log($"Regla '{rule.ruleName}' RECHAZADA para {prefab?.name ?? "null"} " + $"en nivel {level}, índice {index}");
-                
-
-                return false;  // Una regla falla = la plataforma no se coloca
-            }
-        }
-
-        return true; // Todas las reglas aprobadas
+        return path;
     }
 
-    // Registra una plataforma que fue colocada exitosamente
-    // Esto permite que las reglas revisen plataformas ya colocadas
-    public void RegisterPlacedPlatform(GameObject prefab, int level, int index, float angle, Vector3 position)
+    // Angulo maximo (grados) que puede desviarse el paso entre un nivel y el siguiente respecto
+    // del angulo que alinea sus anchors, sin que la conexion vertical supere maxLadderTiltAngle.
+    float MaxStepAngleForTilt(float radius, float levelHeight, float maxLadderTiltAngle)
     {
-        if (prefab == null)
-        {
-            Debug.LogWarning("Intento de registrar plataforma nula");
-            return;
-        }
+        if (radius <= 0f) return maxStepAngle;
 
-        PlatformData data = new PlatformData(prefab, level, index, angle, position);
-        placedPlatforms.Add(data);
-
-
-        Debug.Log($"Plataforma registrada: {prefab.name} en nivel {level}, " + $"índice {index}, ángulo {angle:F1}°, posición {position}");   
+        // maxLadderTiltAngle se mide desde la VERTICAL (0 = escalera perfectamente vertical).
+        float clampedTilt = Mathf.Clamp(maxLadderTiltAngle, 1f, 89f);
+        float maxRun = levelHeight * Mathf.Tan(clampedTilt * Mathf.Deg2Rad);
+        return Mathf.Atan2(maxRun, radius) * Mathf.Rad2Deg;
     }
 
-    // Reinicia el sistema de reglas para una nueva generacion
-    public void ResetRules()
+    string GetTagForLevel(int level, int totalLevels)
     {
-        placedPlatforms.Clear();
-
-        // Reiniciar estadisticas
-        rulePassCount.Clear();
-        ruleFailCount.Clear();
-
-        Debug.Log("Reglas reiniciadas para nueva generacion");
+        if (level == 0) return "Spawn";
+        if (level == totalLevels - 1) return "Final";
+        return "Normal";
     }
 
-    // Actualiza la configuracion del cilindro desde el generador
-    public void UpdateCylinderConfig(float radius, float height)
+    float NormalizeAngle(float angle)
     {
-        cylinderRadius = radius;
-        levelHeight = height;
-
-            Debug.Log($"Configuración de cilindro actualizada: Radio {radius}, Altura de nivel {height}");
-    }
-
-    // Obtiene todas las plataformas colocadas (para depuracion)
-    public List<PlatformData> GetPlacedPlatforms()
-    {
-        return placedPlatforms;
-    }
-
-    // Obtiene estadisticas de las reglas (para depuracion)
-    public string GetRuleStatistics()
-    {
-        string stats = "=== ESTADISTICAS DE REGLAS ===\n";
-
-        foreach (var rule in placementRules)
-        {
-            if (rule == null) continue;
-
-            string name = rule.ruleName;
-            int passes = rulePassCount.ContainsKey(name) ? rulePassCount[name] : 0;
-            int fails = ruleFailCount.ContainsKey(name) ? ruleFailCount[name] : 0;
-            int total = passes + fails;
-            float percentage = total > 0 ? (passes / (float)total) * 100f : 0f;
-
-            stats += $"{name}: {passes} aprobadas, {fails} rechazadas ({percentage:F1}% exito)\n";
-        }
-
-        return stats;
-    }
-
-    private void OnDrawGizmos()
-    {
-        // Dibujar puntos de plataformas colocadas
-        Gizmos.color = Color.cyan;
-        foreach (var platform in placedPlatforms)
-        {
-            Gizmos.DrawWireSphere(platform.position, 0.5f);
-        }
-
-        // Dibujar un circulo en cada nivel con plataformas
-        if (placedPlatforms.Count > 0)
-        {
-            HashSet<int> levelsWithPlatforms = new HashSet<int>();
-            foreach (var platform in placedPlatforms)
-            {
-                levelsWithPlatforms.Add(platform.level);
-            }
-
-            Gizmos.color = Color.yellow;
-            foreach (int level in levelsWithPlatforms)
-            {
-                float y = level * levelHeight;
-                Vector3 center = new Vector3(0, y, 0);
-                Gizmos.DrawWireSphere(center, cylinderRadius);
-            }
-        }
-    }
-
-    // Verifica que todas las reglas esten configuradas correctamente.
-    public bool ValidateRules()
-    {
-        if (placementRules == null || placementRules.Length == 0)
-        {
-            Debug.LogWarning("No hay reglas configuradas");
-            return true;  // No hay reglas = valido
-        }
-
-        bool allValid = true;
-
-        for (int i = 0; i < placementRules.Length; i++)
-        {
-            var rule = placementRules[i];
-
-            if (rule == null)
-            {
-                Debug.LogError($"Regla en posición {i} es NULL");
-                allValid = false;
-                continue;
-            }
-
-            if (string.IsNullOrEmpty(rule.ruleName))
-            {
-                Debug.LogWarning($"Regla en posición {i} no tiene nombre");
-            }
-
-            // Verificar reglas específicas
-            if (rule is MustBeNearPlatform nearRule && nearRule.targetPrefab == null)
-            {
-                Debug.LogWarning($"Regla '{rule.ruleName}' no tiene Target Prefab asignado");
-            }
-
-            /*if (rule is CannotBeNearPlatform cannotRule && cannotRule.forbiddenPrefab == null)
-            {
-                Debug.LogWarning($"Regla '{rule.ruleName}' no tiene Forbidden Prefab asignado");
-            }*/
-        }
-
-        return allValid;
+        angle %= 360f;
+        if (angle < 0f) angle += 360f;
+        return angle;
     }
 }

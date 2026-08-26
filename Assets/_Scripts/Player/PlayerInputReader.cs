@@ -10,6 +10,7 @@ public class PlayerInputReader : MonoBehaviour, PlayerControls.IPlayerActions
     public bool CrouchHeld { get; private set; }
 
     public event Action OnJumpPressed;
+    public event Action OnInteractPressed;
 
     private PlayerControls controls;
 
@@ -49,5 +50,11 @@ public class PlayerInputReader : MonoBehaviour, PlayerControls.IPlayerActions
     public void OnCrouch(InputAction.CallbackContext context)
     {
         CrouchHeld = context.ReadValueAsButton();
+    }
+
+    public void OnInteract(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+            OnInteractPressed?.Invoke();
     }
 }

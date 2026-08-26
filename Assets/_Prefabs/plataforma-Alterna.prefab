@@ -429,8 +429,8 @@ GameObject:
   - component: {fileID: 8557721576242731706}
   - component: {fileID: 8559225880211341070}
   m_Layer: 0
-  m_Name: plataforma-Normal
-  m_TagString: MainPath
+  m_Name: plataforma-Alterna
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -467,9 +467,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CylinderPlatformObj
   tags:
   - Normal
-  - MainPath
   platformMesh: {fileID: 4919983196619078132}
   platformCollider: {fileID: 4919983196619078132}
   anchorL: {fileID: 6102021277901535424}
   anchorR: {fileID: 6824447844041397216}
-  showAnchorGizmos: 1

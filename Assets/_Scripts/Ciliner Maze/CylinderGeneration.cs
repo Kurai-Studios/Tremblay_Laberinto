@@ -18,19 +18,19 @@ public class TowerPlatform
     }
 }
 
-public class CylinderPlatformGen : MonoBehaviour
+public class CylinderGeneration : MonoBehaviour
 {
     [Header("Platform Settings")]
-    [Range(2, 50)] public int minPlatformsPerLevel = 2;
-    [Range(2, 50)] public int maxPlatformsPerLevel = 5;
+    public int minPlatformsPerLevel = 2;
+    public int maxPlatformsPerLevel = 5;
     public float levelHeight = 1.5f;
     public float minAngleSeparation = 30f;  // Grados minimos entre plataformas
 
     [Header("Randomization")]
     //public int seed = -1;
 
-    [Header("Cylinder Prefabs")]
-    public GameObject[] cylinderPrefabs;  // Al menos 4 prefabs diferentes
+    [Header("Cylinder Prefab")]
+    public GameObject cylinderPrefab;
 
     // Variables internas
     private TowerPlatform[,] platforms;
@@ -39,6 +39,25 @@ public class CylinderPlatformGen : MonoBehaviour
     private float cylinderHeight;
     private float cylinderRadius;
     private int totalLevels;
+
+    // Override de dimensiones del cilindro (asignado por CylinderRender)
+    private bool useCylinderOverride = false;
+    private float overrideCylinderRadius = 5f;
+    private float overrideCylinderHeight = 10f;
+
+    // Activa el override y fija radio/altura a usar en la generacion
+    public void SetCylinderOverride(float radius, float height)
+    {
+        useCylinderOverride = true;
+        overrideCylinderRadius = radius;
+        overrideCylinderHeight = height;
+    }
+
+    // Desactiva el override, volviendo a usar los valores del prefab seleccionado
+    public void ClearCylinderOverride()
+    {
+        useCylinderOverride = false;
+    }
 
     // Lista de direcciones para randomizacion
     List<float> angleDirections = new List<float>();
@@ -60,8 +79,8 @@ public class CylinderPlatformGen : MonoBehaviour
             Debug.Log($"Usando semilla aleatoria: {randomSeed}");
         }*/
 
-        // Seleccionar cilindro aleatorio
-        selectedCylinder = SelectRandomCylinder();
+        // Usar el unico cilindro asignado
+        selectedCylinder = cylinderPrefab;
 
         // Obtener altura y radio del cilindro
         cylinderHeight = GetCylinderHeight(selectedCylinder);
@@ -118,22 +137,14 @@ public class CylinderPlatformGen : MonoBehaviour
         return platforms;
     }
 
-    // Selecciona un cilindro aleatorio del array
-    GameObject SelectRandomCylinder()
-    {
-        if (cylinderPrefabs == null || cylinderPrefabs.Length < 4)
-        {
-           // Debug.LogError("Se necesitan al menos 4 prefabs de cilindro en cylinderPrefabs");
-            return null;
-        }
-
-        int randomIndex = Random.Range(0, cylinderPrefabs.Length);
-        return cylinderPrefabs[randomIndex];
-    }
-
     // Obtiene la altura del cilindro usando Mesh.bounds
     float GetCylinderHeight(GameObject cylinder)
     {
+        if (useCylinderOverride)
+        {
+            return overrideCylinderHeight;
+        }
+
         if (cylinder == null)
         {
             //Debug.LogError("Cylinder es null");
@@ -206,6 +217,11 @@ public class CylinderPlatformGen : MonoBehaviour
     // Obtiene el radio del cilindro usando Mesh.bounds
     float GetCylinderRadius(GameObject cylinder)
     {
+        if (useCylinderOverride)
+        {
+            return overrideCylinderRadius;
+        }
+
         if (cylinder == null)
         {
             //Debug.LogError("Cylinder es null");

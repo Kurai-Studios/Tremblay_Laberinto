@@ -31,9 +31,9 @@ public class LadderController : MonoBehaviour
 
         if (verticalInput > 0.1f && ReachedTop())
         {
-            Vector3 exitOffset = currentLadder.TopExitOffset;
+            Vector3 exitMove = currentLadder.TopExitPoint - transform.position;
             Detach();
-            controller.Move(exitOffset);
+            controller.Move(exitMove);
         }
         else if (verticalInput < -0.1f && ReachedBottom())
         {
@@ -45,12 +45,13 @@ public class LadderController : MonoBehaviour
     {
         currentLadder = ladder;
 
-        Vector3 snapPosition = ladder.GetSnapPosition(transform.position);
+        Vector3 approachPosition = transform.position;
+
+        Vector3 snapPosition = ladder.GetSnapPosition(approachPosition);
         snapPosition.y = transform.position.y;
         transform.position = snapPosition;
 
-        targetRotation = Quaternion.LookRotation(-ladder.transform.forward) *
-                         Quaternion.Euler(0f, config.ladderFacingOffset, 0f);
+        targetRotation = ladder.GetFacingRotation(approachPosition, config.ladderFacingOffset);
 
         GetComponent<PlayerStateMachine>().EnterLadder();
     }
@@ -71,13 +72,5 @@ public class LadderController : MonoBehaviour
     {
         if (currentLadder == null) return false;
         return transform.position.y <= currentLadder.BottomPoint.y + 0.1f;
-    }
-
-    void OnTriggerEnter(Collider other)
-    {
-        if (IsOnLadder) return;
-        var ladder = other.GetComponent<LadderZone>();
-        if (ladder != null)
-            Attach(ladder);
     }
 }

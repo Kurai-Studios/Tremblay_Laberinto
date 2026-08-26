@@ -24,6 +24,7 @@ public class PlayerStateMachine : MonoBehaviour
     private LadderController ladderController;
     private PlayerAnimator playerAnimator;
     private LedgeAssist ledgeAssist;
+    private PlayerInteractor interactor;
 
     private float standingHeight;
     private float standingCenterY;
@@ -51,6 +52,9 @@ public class PlayerStateMachine : MonoBehaviour
 
         ledgeAssist = gameObject.AddComponent<LedgeAssist>();
         ledgeAssist.Init(controller, config);
+
+        interactor = gameObject.AddComponent<PlayerInteractor>();
+        interactor.Init(input);
 
         standingHeight = config.standingHeight;
         standingCenterY = config.standingCenterY;

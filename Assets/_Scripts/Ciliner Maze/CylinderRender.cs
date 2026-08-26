@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.ProBuilder.MeshOperations;
 
+/* ===== SISTEMA DE REGLAS - Comentado por ahora, retomar mas adelante =====
 [System.Serializable]
 public class PlatformRule
 {
@@ -29,24 +30,46 @@ public class PlatformRule
     [HideInInspector] public int currentLevelCount = 0;
     [HideInInspector] public bool isSaturated = false;
 }
+*/
 
 public class CylinderRender : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] CylinderPlatformGen platformGen;
+    [SerializeField] CylinderGeneration platformGen;
     [SerializeField] RuleManager ruleManager;
-
-    [Header("Platform Rules")]
-    public PlatformRule[] platformRules;
+    [SerializeField] LadderPlacer ladderPlacer;
 
     [Header("Platform Settings")]
+    public GameObject[] platformPrefabs; // Reemplaza temporalmente a platformRules mientras el sistema de reglas esta desactivado
     public float platformScale = 1f;
-    public float heightOffset = 0f;  // Desplazamiento vertical desde la base del cilindro
+    [Tooltip("Desactivado temporalmente para poder ver y diagnosticar el camino principal (plataformas + extras encadenadas) sin el ruido visual de las escaleras. Reactivar cuando el camino principal este validado")]
+    public bool enableLadders = false;
+
+    [Header("Cylinder Settings")]
+    public bool overrideCylinderDimensions = false;
+    public float cylinderRadius = 5f;
+    public float cylinderHeight = 10f;
+
+    [Header("Cylinder Materials")]
+    [Tooltip("Se elige un material al azar de esta lista y se aplica al cilindro instanciado en cada partida")]
+    public Material[] cylinderMaterials;
 
     /*[Header("Debug")]
     public bool showGizmos = false;*/
 
-    private List<PlatformRule> availableRules = new List<PlatformRule>();
+    /* private List<PlatformRule> availableRules = new List<PlatformRule>(); */
+
+    // Plataforma principal del camino por nivel (la primera generada en ese nivel; las
+    // extras del mismo nivel no cuentan). LadderPlacer la usa para conectar niveles consecutivos.
+    private Dictionary<int, CylinderPlatformObj> mainPathPlatforms = new Dictionary<int, CylinderPlatformObj>();
+
+    // Geometria de la generacion en curso (radio, altura de nivel, posicion base), cacheada para
+    // que SpawnExtraBesideAnchor pueda instanciar una plataforma nueva con la misma formula que el
+    // resto del camino. LadderPlacer.PlaceLadders() corre DENTRO de este mismo GenerateTower(), asi
+    // que estos valores siguen siendo validos cuando lo llama.
+    private float lastCylinderRadius;
+    private float lastLevelHeight;
+    private Vector3 lastBasePosition;
 
     private void Start()
     {
@@ -63,35 +86,49 @@ public class CylinderRender : MonoBehaviour
             return;
         }
 
-        if (platformRules == null || platformRules.Length == 0)
+        if (platformPrefabs == null || platformPrefabs.Length == 0)
         {
-            //Debug.LogError("PlatformPrefab no asignado en PlatformRenderer");
+            //Debug.LogError("No hay platformPrefabs asignados en PlatformRenderer");
             return;
         }
 
-        ResetCounters();
+        /* ResetCounters(); */
 
-        if (ruleManager != null)
+        /* if (ruleManager != null)
         {
             ruleManager.ResetRules();
 
             float radius = platformGen.GetCylinderRadius();
             float height = platformGen.GetCylinderHeight();
             ruleManager.UpdateCylinderConfig(radius, height);
+        } */
+
+        // Aplicar (o limpiar) el override de dimensiones del cilindro antes de generar
+        if (overrideCylinderDimensions)
+        {
+            platformGen.SetCylinderOverride(cylinderRadius, cylinderHeight);
+        }
+        else
+        {
+            platformGen.ClearCylinderOverride();
         }
 
         // Obtener los datos de las plataformas
         TowerPlatform[,] platforms = platformGen.GetPlatforms();
 
         // Obtener dimensiones del cilindro
-        float cylinderRadius = platformGen.GetCylinderRadius();
-        float cylinderHeight = platformGen.GetCylinderHeight();
+        float cylinderRadiusValue = platformGen.GetCylinderRadius();
+        float cylinderHeightValue = platformGen.GetCylinderHeight();
         int totalLevels = platformGen.GetTotalLevels();
 
         Vector3 basePosition = platformGen.GetPlatformBasePosition();
 
+        lastCylinderRadius = cylinderRadiusValue;
+        lastLevelHeight = platformGen.levelHeight;
+        lastBasePosition = basePosition;
+
         //Debug.Log($"Renderizando plataformas desde: {basePosition}");
-        //Debug.Log($"Radio del cilindro: {cylinderRadius}");
+        //Debug.Log($"Radio del cilindro: {cylinderRadiusValue}");
         //Debug.Log($"Total de niveles: {platforms.GetLength(0)}");
 
         // Validar que hay datos
@@ -107,92 +144,371 @@ public class CylinderRender : MonoBehaviour
         {
             GameObject cylinderInstance = Instantiate(cylinder, Vector3.zero, Quaternion.identity, transform);
             // El cilindro se instancia en el centro (0,0,0)
-        }
 
-        int totalPlatforms = CountTotalPlatforms(platforms);
-        int totalAssigned = 0;
-
-        foreach (var rule in platformRules)
-        {
-            totalAssigned += rule.exactCount;
-        }
-
-        // Verificar que el total de plataformas asignadas no exceda el total disponible
-        if (totalAssigned > totalPlatforms)
-        {
-            //Debug.LogWarning($"¡Cuidado! Has asignado {totalAssigned} plataformas pero solo hay {totalPlatforms} espacios. Algunas no se podrán generar.");
-        }
-        else if (totalAssigned < totalPlatforms)
-        {
-            //Debug.Log($"Has asignado {totalAssigned} plataformas de {totalPlatforms} totales. El resto serán plataformas por defecto.");
-        }
-
-        // Loop a traves de todos los niveles y plataformas
-        int levelCount = platforms.GetLength(0);
-        int maxPlatformsPerLevel = platforms.GetLength(1);
-
-        for (int level = 0; level < levelCount; level++)
-        {
-
-            ResetLevelCounters();
-
-            for (int i = 0; i < maxPlatformsPerLevel; i++)
+            // Si hay override activo, escalar el cilindro instanciado para que coincida visualmente
+            if (overrideCylinderDimensions)
             {
-                TowerPlatform platformData = platforms[level, i];
-                if (platformData == null) continue;
+                CylinderData baseData = cylinder.GetComponent<CylinderData>();
+                if (baseData == null)
+                    baseData = cylinder.GetComponentInChildren<CylinderData>();
 
-                GameObject selectedPrefab = SelectPrefabWithRules(level, i, platforms);
-
-                if (selectedPrefab == null)
+                if (baseData != null && baseData.radio > 0f && baseData.altura > 0f)
                 {
-                    // Si no hay prefab seleccionado, usar el primero de la lista
-                    selectedPrefab = platformRules[0].prefab;
-                    //Debug.Log($"Usando prefab por defecto: {platformRules[0].platformName}");
+                    float radiusScale = cylinderRadius / baseData.radio;
+                    float heightScale = cylinderHeight / baseData.altura;
+                    cylinderInstance.transform.localScale = new Vector3(radiusScale, heightScale, radiusScale);
                 }
+            }
 
-                GameObject newPlatform = Instantiate(selectedPrefab, transform);
-                newPlatform.transform.localScale = Vector3.one * platformScale;
-
-                CylinderPlatformObj platformCell = newPlatform.GetComponent<CylinderPlatformObj>();
-                if (platformCell == null)
-                {
-                    //Debug.LogError($"PlatformPrefab no tiene componente PlatformCellObj");
-                    continue;
-                }
-
-                
-                platformCell.Init(platformData, cylinderRadius, heightOffset,
-                                 platformGen.levelHeight, basePosition);
-
-                if (ruleManager != null)
-                {
-                    ruleManager.RegisterPlacedPlatform(
-                        selectedPrefab,
-                        level,
-                        i,
-                        platformData.angle,
-                        newPlatform.transform.position
-                    );
-                }
-
-                UpdateCounters(selectedPrefab);
+            // Aplicar un material aleatorio de la lista, si hay alguno asignado
+            if (cylinderMaterials != null && cylinderMaterials.Length > 0)
+            {
+                Material randomMaterial = cylinderMaterials[Random.Range(0, cylinderMaterials.Length)];
+                ApplyMaterial(cylinderInstance, randomMaterial);
             }
         }
 
-        Debug.Log($"=== ESTADÍSTICAS DE GENERACIÓN ===");
-        foreach (var rule in platformRules)
+        // Por ahora solo generamos el camino (path) definido por el RuleManager,
+        // sin ninguna otra regla ni relleno aleatorio de plataformas.
+        if (ruleManager == null)
         {
-            Debug.Log($"{rule.platformName}: {rule.currentCount} / {rule.exactCount} plataformas generadas");
+            //Debug.LogError("RuleManager no asignado en CylinderRender");
+            return;
         }
 
-        if (ruleManager != null)
+        // Se le pasa al RuleManager el radio, la altura de nivel, la tolerancia de inclinacion
+        // de LadderPlacer y el angulo que ocupa el anchor L/R de una plataforma principal (tomando
+        // "Normal" como representativa; hoy los 4 prefabs comparten el mismo offset de anchor)
+        // para que el propio camino apunte sus pasos de angulo entre niveles al valor que deja
+        // los anchors casi alineados verticalmente, en vez de generar pasos arbitrarios y luego
+        // tener que arreglar la conexion despues.
+        float maxLadderTilt = ladderPlacer != null ? ladderPlacer.maxTiltFromVertical : 45f;
+        float connectorHalfWidthAngle = GetConnectorHalfWidthAngle(cylinderRadiusValue);
+        List<PathPlatform> path = ruleManager.GeneratePath(totalLevels, cylinderRadiusValue, platformGen.levelHeight, maxLadderTilt, connectorHalfWidthAngle);
+
+        mainPathPlatforms.Clear();
+
+        // Estado del encadenado por anchors: angulo y medio-ancho tangencial de la ultima
+        // plataforma colocada en el nivel actual. Se reinicia cada vez que llega una plataforma
+        // principal (no encadenada), que es siempre la primera de cada nivel.
+        float chainAngle = 0f;
+        float chainHalfWidth = 0f;
+
+        // Angulo y medio-ancho (angular y tangencial/lineal) de la plataforma de Spawn (nivel 0),
+        // guardados para poder rellenar todo el nivel 0 con plataformas Normal encadenadas a
+        // partir de su anchor (ver el relleno de anillo despues del foreach de abajo).
+        float spawnAngle = 0f;
+        float spawnHalfWidth = 0f;
+        float spawnHalfWidthAngle = 0f;
+        bool hasSpawnPlatform = false;
+
+        // Bookkeeping de la cadena de extras en curso (si hay una): la plataforma principal a la
+        // que pertenece, el ultimo eslabon colocado y el sentido (L/R) en el que se esta armando.
+        // Se usa para, al cerrar la cadena (ver FinalizeChain), redirigir el anchor efectivo de la
+        // principal al extremo libre del ultimo eslabon (ver CylinderPlatformObj.SetEffectiveAnchorL/R).
+        CylinderPlatformObj chainOwner = null;
+        CylinderPlatformObj lastChainedCell = null;
+        float chainDirectionInProgress = 1f;
+
+        void FinalizeChain()
         {
-            Debug.Log(ruleManager.GetRuleStatistics());
+            if (chainOwner == null || lastChainedCell == null) return;
+
+            // Convencion real del prefab (verificada contra posiciones de mundo): el anchor R
+            // queda en angulo = centro - medioAncho, y L en centro + medioAncho -- lo opuesto de
+            // lo que el nombre sugeriria a primera vista. Por eso una cadena que avanza en sentido
+            // POSITIVO (chainDirectionInProgress > 0, angulo creciente) se aleja de la principal
+            // por el lado L de cada eslabon (el que queda mas lejos, hacia angulos mayores), y una
+            // que avanza en sentido negativo se aleja por el lado R.
+            Transform outerAnchor = chainDirectionInProgress > 0f
+                ? lastChainedCell.GetAnchorL()
+                : lastChainedCell.GetAnchorR();
+
+            if (outerAnchor == null) { chainOwner = null; lastChainedCell = null; return; }
+
+            if (chainDirectionInProgress > 0f)
+                chainOwner.SetEffectiveAnchorL(outerAnchor);
+            else
+                chainOwner.SetEffectiveAnchorR(outerAnchor);
+
+            chainOwner = null;
+            lastChainedCell = null;
         }
 
-        //Debug.Log($"Torre generada: {levelCount} niveles, {CountTotalPlatforms(platforms)} plataformas totales");
+        foreach (PathPlatform pathPlatform in path)
+        {
+            GameObject selectedPrefab = GetPrefabByTag(pathPlatform.tag);
+            if (selectedPrefab == null)
+            {
+                //Debug.LogWarning($"No hay ningun platformPrefab con el tag '{pathPlatform.tag}'");
+                continue;
+            }
+
+            CylinderPlatformObj prefabData = selectedPrefab.GetComponent<CylinderPlatformObj>();
+            float halfWidth = (prefabData != null ? prefabData.GetTangentialHalfWidth() : 0f) * platformScale;
+            float halfWidthAngle = HalfWidthToAngle(halfWidth, cylinderRadiusValue);
+
+            float finalAngle;
+            if (pathPlatform.isChained)
+            {
+                // Encadenar por anchors: avanzar justo lo necesario para que el anchor de la
+                // plataforma anterior quede pegado al anchor de esta, sin superponerse ni dejar hueco
+                float angleStep = HalfWidthToAngle(chainHalfWidth, cylinderRadiusValue) + halfWidthAngle;
+                finalAngle = NormalizeAngle(chainAngle + angleStep * pathPlatform.chainDirection);
+            }
+            else
+            {
+                // Nueva plataforma principal: cierra cualquier cadena de extras que veniamos
+                // armando para el nivel anterior antes de arrancar de cero.
+                FinalizeChain();
+                finalAngle = pathPlatform.angle;
+            }
+
+            chainAngle = finalAngle;
+            chainHalfWidth = halfWidth;
+
+            if (pathPlatform.level == 0 && !pathPlatform.isChained)
+            {
+                hasSpawnPlatform = true;
+                spawnAngle = finalAngle;
+                spawnHalfWidth = halfWidth;
+                spawnHalfWidthAngle = halfWidthAngle;
+            }
+
+            GameObject newPlatform = Instantiate(selectedPrefab, transform);
+            newPlatform.transform.localScale = Vector3.one * platformScale;
+
+            CylinderPlatformObj platformCell = newPlatform.GetComponent<CylinderPlatformObj>();
+            if (platformCell == null)
+            {
+                //Debug.LogError($"PlatformPrefab no tiene componente PlatformCellObj");
+                continue;
+            }
+
+            TowerPlatform platformData = new TowerPlatform(pathPlatform.level, finalAngle);
+
+            platformCell.Init(platformData, cylinderRadiusValue,
+                             platformGen.levelHeight, basePosition);
+
+            // Solo se guarda la primera plataforma generada por nivel (la principal del
+            // camino); las extras del mismo nivel no se usan como puntos de conexion de escaleras.
+            if (!mainPathPlatforms.ContainsKey(pathPlatform.level))
+                mainPathPlatforms[pathPlatform.level] = platformCell;
+
+            if (pathPlatform.isChained)
+            {
+                // Primer eslabon de una cadena nueva: la "dueña" es la principal de este mismo nivel.
+                if (chainOwner == null && mainPathPlatforms.TryGetValue(pathPlatform.level, out CylinderPlatformObj levelMain))
+                    chainOwner = levelMain;
+
+                lastChainedCell = platformCell;
+                chainDirectionInProgress = pathPlatform.chainDirection;
+            }
+        }
+
+        // Cierra la cadena del ultimo nivel generado (el foreach no tiene una plataforma "siguiente"
+        // que dispare el cierre habitual).
+        FinalizeChain();
+
+        //Debug.Log($"Camino generado: {path.Count} plataformas en {totalLevels} niveles");
+
+        // Rellenar el nivel de Spawn (nivel 0) por completo con plataformas Normal, encadenadas
+        // por anchors igual que las extras de niveles intermedios, dando toda la vuelta al
+        // cilindro a partir del anchor de Spawn. Asi el nivel 0 queda 100% caminable y el
+        // jugador siempre puede alcanzar la escalera/rampa de salida sin importar en que angulo
+        // haya quedado, en vez de depender de una unica plataforma de Spawn aislada.
+        if (hasSpawnPlatform)
+            FillSpawnLevelRing(spawnAngle, spawnHalfWidth, spawnHalfWidthAngle, cylinderRadiusValue, basePosition);
+
+        // Este proyecto tiene 'Physics.autoSyncTransforms' desactivado (Edit > Project Settings >
+        // Physics), asi que los colliders de las plataformas recien reposicionadas (transform.position
+        // asignado arriba, en este mismo frame) NO quedan sincronizados con el motor de fisica hasta
+        // el proximo paso de simulacion o una llamada explicita a esto. Sin este sync, cualquier
+        // Physics.Raycast/RaycastAll/OverlapSphere hecho en el resto de este metodo (el bloqueo de
+        // escaleras en LadderPlacer, los rayos de deteccion de anchor en CylinderPlatformObj, etc.)
+        // consulta posiciones VIEJAS de los colliders y practicamente nunca detecta nada real.
+        Physics.SyncTransforms();
+
+        // Escaleras: desactivadas temporalmente via 'enableLadders' para poder ver y diagnosticar
+        // el camino principal (plataformas + extras encadenadas) por si solo, sin el ruido visual
+        // de las escaleras encima.
+        if (enableLadders && ladderPlacer != null)
+            ladderPlacer.PlaceLadders();
+        else if (ladderPlacer != null)
+            ladderPlacer.ClearLadders();
     }
 
+    // Rellena todo el nivel 0 con plataformas "Normal" encadenadas por anchors, partiendo del
+    // anchor de la plataforma de Spawn y dando toda la vuelta al cilindro en una sola direccion,
+    // con el mismo calculo de paso angular (anchor a anchor, sin superponerse ni dejar hueco) que
+    // usan las extras encadenadas de los niveles intermedios. Se detiene cuando ya se cubrio todo
+    // el arco disponible (360 grados menos el propio ancho de Spawn), es decir, cuando el proximo
+    // eslabon cerraria el anillo volviendo a tocar a Spawn desde el otro lado.
+    //
+    // La condicion de corte se basa en sumar los angleStep ya usados ('sweptAngle') en vez de
+    // comparar el angulo del candidato contra el de Spawn con un chequeo de superposicion: ese
+    // chequeo comparaba una diferencia de angulos (via DeltaAngle) contra una suma de dos
+    // conversiones atan2 independientes, y el primer eslabon (que por construccion queda
+    // exactamente tangente al anchor de Spawn, sin superponerse) terminaba marcado como
+    // superpuesto por un error de redondeo de punto flotante entre ambos caminos de calculo,
+    // frenando el relleno antes de agregar ni una sola plataforma.
+    void FillSpawnLevelRing(float spawnAngle, float spawnHalfWidth, float spawnHalfWidthAngle, float cylinderRadiusValue, Vector3 basePosition)
+    {
+        GameObject normalPrefab = GetPrefabByTag("Normal");
+        if (normalPrefab == null) return;
+
+        CylinderPlatformObj normalPrefabData = normalPrefab.GetComponent<CylinderPlatformObj>();
+        if (normalPrefabData == null) return;
+
+        float ringHalfWidth = normalPrefabData.GetTangentialHalfWidth() * platformScale;
+        float ringHalfWidthAngle = HalfWidthToAngle(ringHalfWidth, cylinderRadiusValue);
+        if (ringHalfWidthAngle <= 0f) return;
+
+        float chainAngle = spawnAngle;
+        float chainHalfWidth = spawnHalfWidth;
+
+        // Arco total disponible para el anillo: la vuelta completa menos el ancho que ya ocupa
+        // la propia plataforma de Spawn (sus dos medios-anchos, a ambos lados de su centro).
+        float remainingArc = 360f - (spawnHalfWidthAngle * 2f);
+        float sweptAngle = 0f;
+
+        // Salvaguarda contra loop infinito: nunca deberian hacer falta mas eslabones que los que
+        // entran, en el peor caso, en una vuelta completa.
+        int maxRingPlatforms = Mathf.CeilToInt(360f / Mathf.Max(1f, ringHalfWidthAngle)) + 1;
+
+        for (int i = 0; i < maxRingPlatforms; i++)
+        {
+            float angleStep = HalfWidthToAngle(chainHalfWidth, cylinderRadiusValue) + ringHalfWidthAngle;
+
+            // Si este eslabon ya no entra en el arco restante, el anillo esta completo: dejar de
+            // agregar plataformas en vez de superponerse a Spawn por el otro lado.
+            if (sweptAngle + angleStep > remainingArc)
+                break;
+
+            float candidateAngle = NormalizeAngle(chainAngle + angleStep);
+
+            GameObject ringPlatform = Instantiate(normalPrefab, transform);
+            ringPlatform.transform.localScale = Vector3.one * platformScale;
+
+            CylinderPlatformObj ringPlatformCell = ringPlatform.GetComponent<CylinderPlatformObj>();
+            if (ringPlatformCell != null)
+            {
+                TowerPlatform ringPlatformData = new TowerPlatform(0, candidateAngle);
+                ringPlatformCell.Init(ringPlatformData, cylinderRadiusValue, platformGen.levelHeight, basePosition);
+            }
+
+            chainAngle = candidateAngle;
+            chainHalfWidth = ringHalfWidth;
+            sweptAngle += angleStep;
+        }
+    }
+
+    // Plataforma principal del camino por nivel, usada por LadderPlacer para conectar niveles consecutivos
+    public Dictionary<int, CylinderPlatformObj> GetMainPathPlatforms()
+    {
+        return mainPathPlatforms;
+    }
+
+    // Instancia una plataforma "Normal" extra, pegada por su borde al anchor L o R indicado de
+    // 'ownerPlatform', extendiendose mas hacia afuera en la misma direccion en la que ese anchor ya
+    // se aleja del centro de la plataforma (misma convencion L/R que FinalizeChain: L = angulo
+    // creciente, R = angulo decreciente). Usada por LadderPlacer cuando una escalera termina
+    // conectando el mismo lado (L-L) en ambas plataformas: agrega una plataforma de relleno junto a
+    // esa conexion, en el nivel que "pidio" la escalera (el de abajo). Es puramente una plataforma
+    // mas del nivel -- no se integra al sistema de anchor efectivo (SetEffectiveAnchorL/R), asi que
+    // no cambia a que anchor apunta ninguna escalera existente ni futura.
+    public void SpawnExtraBesideAnchor(CylinderPlatformObj ownerPlatform, bool useLeftAnchor)
+    {
+        if (ownerPlatform == null) return;
+
+        GameObject normalPrefab = GetPrefabByTag("Normal");
+        if (normalPrefab == null) return;
+
+        CylinderPlatformObj normalPrefabData = normalPrefab.GetComponent<CylinderPlatformObj>();
+        if (normalPrefabData == null) return;
+
+        TowerPlatform ownerData = ownerPlatform.GetPlatformData();
+        if (ownerData == null) return;
+
+        float ownerHalfWidthAngle = HalfWidthToAngle(ownerPlatform.GetTangentialHalfWidth() * platformScale, lastCylinderRadius);
+        float extraHalfWidthAngle = HalfWidthToAngle(normalPrefabData.GetTangentialHalfWidth() * platformScale, lastCylinderRadius);
+
+        float direction = useLeftAnchor ? 1f : -1f;
+        float finalAngle = NormalizeAngle(ownerData.angle + (ownerHalfWidthAngle + extraHalfWidthAngle) * direction);
+
+        GameObject extraInstance = Instantiate(normalPrefab, transform);
+        extraInstance.transform.localScale = Vector3.one * platformScale;
+
+        CylinderPlatformObj extraCell = extraInstance.GetComponent<CylinderPlatformObj>();
+        if (extraCell == null) return;
+
+        TowerPlatform extraData = new TowerPlatform(ownerData.level, finalAngle);
+        extraCell.Init(extraData, lastCylinderRadius, lastLevelHeight, lastBasePosition);
+
+        // Recien reposicionada: sincronizar fisica para que cualquier raycast posterior (blocking
+        // checks de otras escaleras, gizmos, etc.) vea su collider en la posicion correcta (ver el
+        // mismo Physics.SyncTransforms() al final de GenerateTower).
+        Physics.SyncTransforms();
+    }
+
+    // Aplica un material a todos los renderers del cilindro instanciado (el propio objeto y sus hijos)
+    void ApplyMaterial(GameObject target, Material material)
+    {
+        if (material == null) return;
+
+        Renderer[] renderers = target.GetComponentsInChildren<Renderer>();
+        foreach (Renderer renderer in renderers)
+        {
+            renderer.material = material;
+        }
+    }
+
+    // Convierte un medio-ancho tangencial (mitad del ancho de una plataforma, medido entre sus
+    // anchors L/R) en el angulo (grados) que ocupa alrededor del cilindro a un radio dado.
+    // Usado para encadenar plataformas del mismo nivel por sus anchors sin superponerse.
+    public float HalfWidthToAngle(float halfWidth, float radius)
+    {
+        if (radius <= 0f) return 0f;
+        return Mathf.Atan2(halfWidth, radius) * Mathf.Rad2Deg;
+    }
+
+    public float NormalizeAngle(float angle)
+    {
+        angle %= 360f;
+        if (angle < 0f) angle += 360f;
+        return angle;
+    }
+
+    // Angulo (grados) que ocupa, a un radio dado, el anchor L/R del prefab principal del camino
+    // (se usa "Normal" como representativo: hoy los 4 prefabs de plataforma comparten el mismo
+    // offset de anchor). RuleManager lo usa para apuntar sus pasos al angulo que deja los anchors
+    // de dos niveles consecutivos casi alineados verticalmente (ver GeneratePath).
+    float GetConnectorHalfWidthAngle(float radius)
+    {
+        GameObject normalPrefab = GetPrefabByTag("Normal");
+        if (normalPrefab == null) return 0f;
+
+        CylinderPlatformObj prefabData = normalPrefab.GetComponent<CylinderPlatformObj>();
+        if (prefabData == null) return 0f;
+
+        float halfWidth = prefabData.GetTangentialHalfWidth() * platformScale;
+        return HalfWidthToAngle(halfWidth, radius);
+    }
+
+    // Busca en platformPrefabs el primer prefab cuyo CylinderPlatformObj tenga el tag indicado
+    public GameObject GetPrefabByTag(string tag)
+    {
+        foreach (GameObject prefab in platformPrefabs)
+        {
+            CylinderPlatformObj platformObj = prefab.GetComponent<CylinderPlatformObj>();
+            if (platformObj != null && platformObj.HasTag(tag))
+                return prefab;
+        }
+
+        return null;
+    }
+
+    /* ===== SELECCION POR REGLAS - Comentado por ahora, retomar mas adelante =====
     GameObject SelectPrefabWithRules(int level, int index, TowerPlatform[,] allPlatforms)
     {
         List<GameObject> availablePrefabs = new List<GameObject>();
@@ -235,10 +551,10 @@ public class CylinderRender : MonoBehaviour
 
             if (ruleManager == null || ruleManager.CanPlacePlatform(candidate, level, index, allPlatforms))
             {
-                
+
                 Debug.Log($"Prefab '{candidate.name}' seleccionado para nivel {level}, " +
                              $"índice {index} (intento {attempts})");
-                
+
                 return candidate;
             }
             else
@@ -251,7 +567,7 @@ public class CylinderRender : MonoBehaviour
         }
 
         Debug.LogWarning($"No se encontró prefab que cumpla reglas en nivel {level}, índice {index}");
-        
+
         return null;
     }
 
@@ -307,6 +623,7 @@ public class CylinderRender : MonoBehaviour
         }
         return count;
     }
+    */
 
     // Limpia todas las plataformas generadas (para regenerar)
     public void ClearTower()
@@ -317,10 +634,15 @@ public class CylinderRender : MonoBehaviour
             DestroyImmediate(transform.GetChild(i).gameObject);
         }
 
-        ResetCounters();
+        mainPathPlatforms.Clear();
+
+        if (ladderPlacer != null)
+            ladderPlacer.ClearLadders();
+
+        /* ResetCounters();
 
         if (ruleManager != null)
-            ruleManager.ResetRules();
+            ruleManager.ResetRules(); */
     }
 
     // Regenera la torre
